@@ -1,0 +1,32 @@
+<head th:fragment="head" th:with="theme=${#cookies.get(#httpServletRequest,'theme','cerulean')}">
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<meta name="renderer" content="webkit"><meta http-equiv="X-UA-Compatible" content="IE=8,IE=9,IE=10" />
+	<meta http-equiv="Expires" content="0"><meta http-equiv="Cache-Control" content="no-cache">
+	<meta http-equiv="Cache-Control" content="no-store">
+	<script type="text/javascript" th:inline="javascript">
+		var ctxPath = [[${#httpServletRequest.contextPath}]];
+	</script>
+	<script th:src="@{/static/jquery/jquery-1.8.3.min.js}" type="text/javascript"></script>
+	<link th:href="@{'/static/bootstrap/2.3.1/css_'+ ${theme} + '/bootstrap.min.css'}" type="text/css" rel="stylesheet" />
+	<script th:src="@{/static/bootstrap/2.3.1/js/bootstrap.min.js}" type="text/javascript"></script>
+	<link th:href="@{/static/bootstrap/2.3.1/awesome/font-awesome.min.css}" type="text/css" rel="stylesheet" />
+	<!--[if lte IE 7]><link th:href="@{/static/bootstrap/2.3.1/awesome/font-awesome-ie7.min.css}" type="text/css" rel="stylesheet" /><![endif]-->
+	<!--[if lte IE 6]><link th:href="@{/static/bootstrap/bsie/css/bootstrap-ie6.min.css}" type="text/css" rel="stylesheet" />
+	<script th:src="@{/bootstrap/bsie/js/bootstrap-ie.min.js}" type="text/javascript"></script><![endif]-->
+	<link th:href="@{/static/jquery-select2/3.4/select2.min.css}" rel="stylesheet" />
+	<script th:src="@{/static/jquery-select2/3.4/select2.min.js}" type="text/javascript"></script>
+	<link th:href="@{/static/jquery-validation/1.11.0/jquery.validate.min.css}" type="text/css" rel="stylesheet" />
+	<script th:src="@{/static/jquery-validation/1.11.0/jquery.validate.min.js}" type="text/javascript"></script>
+	<link th:href="@{/static/jquery-jbox/2.3/Skins/Bootstrap/jbox.min.css}" rel="stylesheet" />
+	<script th:src="@{/static/jquery-jbox/2.3/jquery.jBox-2.3.min.js}" type="text/javascript"></script>
+	<script th:src="@{/static/My97DatePicker/WdatePicker.js}" type="text/javascript"></script>
+	<script th:src="@{/static/common/mustache.min.js}" type="text/javascript"></script>
+	<link th:href="@{/static/common/jeesite.css}" type="text/css" rel="stylesheet" />
+	<script th:src="@{/static/common/jeesite.js}" type="text/javascript"></script>
+</head>
+
+<div th:fragment="message" th:if="${!#strings.isEmpty(message)}">
+<div th:with="ctype=${#strings.isEmpty(type) ? (#strings.contains(message,'失败') ? 'error' : 'success') : type}" id="messageBox" th:class="${'alert alert-'+ctype+' hide'}" th:inline="text"><button data-dismiss="alert" class="close">×</button>[[${message}]]
+</div>
+<script type="text/javascript">top.$.jBox.tip('[[${message}]]','[[${ctype}]]',{persistent:true,opacity:0});$("#messageBox").show();</script>
+</div>

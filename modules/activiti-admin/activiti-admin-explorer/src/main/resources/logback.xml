@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="5 seconds" debug="false">
+    <property name="LOG_PATH" value="${log4j.file.path:-F:/logs/}"/>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+     <!-- 
+        将文件放到项目project/src/main/resources目录下
+        修改PROJECT_NAME属性的值
+      -->
+    <!-- <property name="logback.env" value="dev"/> -->
+    <property name="MAX_LOG_FILE_SIZE" value="100mb"/>
+    <property name="PROJECT_NAME" value="activiti-admin"/>
+    <property name="MAX_FILES" value="${logback.maxFiles:-10}"/>
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [${LOG_LEVEL_PATTERN:-%5p}] | [%-22.22t{22}] | %-40.40logger{39} | %msg%n"/>
+
+    <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="APP_INFO_APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <file>${LOG_PATH}/${PROJECT_NAME}-info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${PROJECT_NAME}-info-%i.log</fileNamePattern>
+            <maxIndex>${MAX_FILES}</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>${MAX_LOG_FILE_SIZE}</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+    
+    <appender name="APP_ERROR_APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <file>${LOG_PATH}/${PROJECT_NAME}-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${PROJECT_NAME}-error-%i.log</fileNamePattern>
+            <maxIndex>${MAX_FILES}</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>${MAX_LOG_FILE_SIZE}</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <!-- show activiti sql-->
+    <logger name="org.activiti.engine.impl.persistence.entity" level="INFO" />
+    <!-- LEVEL CAN NOT BE DEBUG, OR WOULD BE ERROR -->
+	<logger name="org.apache.catalina" level="INFO"></logger>
+	
+    <root level="DEBUG">
+        <appender-ref ref="APP_INFO_APPENDER"/>
+        <appender-ref ref="APP_ERROR_APPENDER"/>
+        <if condition='isDefined("logback.env")'>
+            <then>
+                <if condition='property("logback.env").contains("dev")'>
+                    <then>
+                        <appender-ref ref="CONSOLE_APPENDER"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </root>
+</configuration>

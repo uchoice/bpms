@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>流程代办信息管理</title>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("#inputForm").validate({
+				submitHandler: function(form){
+					loading('正在提交，请稍等...');
+					form.submit();
+				},
+				errorContainer: "#messageBox",
+				errorPlacement: function(error, element) {
+					$("#messageBox").text("输入有误，请先更正。");
+					if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+						error.appendTo(element.parent().parent());
+					} else {
+						error.insertAfter(element);
+					}
+				}
+			});
+		});
+	</script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+		<li><a th:href="@{/activiti/actDelegate/}">流程代办信息列表</a></li>
+		<li class="active"><a th:href="@{${'/activiti/actDelegate/form?id='+actDelegate.id}}">流程代办信息添加</a></li>
+	</ul><br/>
+	<div th:replace="/common/fragment::message">信息</div>
+	<form id="inputForm" th:action="@{/activiti/actDelegate/save}" method="post" class="form-horizontal">
+		<div class="control-group">
+			<label class="control-label">被代理人：</label>
+			<div class="controls">
+				<span th:text="${#authentication.name}"></span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">代理人：</label>
+			<div class="controls">
+				<input type="text" name="assign" maxlength="64" class="input-xlarge required"/>
+				<span class="help-inline"><font color="red">*</font> </span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">流程ID：</label>
+			<div class="controls">
+				<input type="text" name="processId" maxlength="64" class="input-xlarge required"/>
+				<span class="help-inline"><font color="red">*</font> </span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">流程名称：</label>
+			<div class="controls">
+				<input type="text" name="processName" maxlength="255" class="input-xlarge "/>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">开始日期：</label>
+			<div class="controls">
+				<input name="startDate" id="startDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',isShowClear:false,minDate:'%y-%M-%d %H:%m:%s'});"/>
+				<span class="help-inline"><font color="red">*</font> </span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">截止日期：</label>
+			<div class="controls">
+				<input name="endDate" id="endDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',isShowClear:false,minDate:'#F{$dp.$D(\'startDate\')||\'%y-%M-%d %H:%m:%s\'}'});"/>
+				<span class="help-inline"><font color="red">*</font> </span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">备注：</label>
+			<div class="controls">
+				<textarea rows="4" cols="50" name="remarks" maxlength="50" class="input-xlarge"></textarea>
+			</div>
+		</div>
+		<div class="form-actions">
+			<input id="btnSubmit" class="btn btn-primary" type="submit" value="保 存"/>
+			<input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+		</div>
+	</form>
+</body>
+</html>

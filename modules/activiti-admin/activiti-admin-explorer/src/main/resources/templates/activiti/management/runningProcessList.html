@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>管理运行中流程</title>
+	<script type="text/javascript" th:src="@{/static/activiti/workflow.js}"></script>
+	<script type="text/javascript" th:src="@{/static/activiti/process-list.js}"></script>
+	<script type="text/javascript">
+		$(function() {
+			// 跟踪
+		    $('.trace').click(graphTrace);
+		});
+	</script>
+</head>
+
+<body>
+	<div th:replace="/common/fragment::message">信息</div>
+	<table class="table table-bordered table-hover table-condensed">
+		<tr>
+			<th>执行ID</th>
+			<th>流程实例ID</th>
+			<th>流程定义ID</th>
+			<th>流程名称</th>
+			<th>当前节点</th>
+			<th>是否挂起</th>
+			<th>操作</th>
+		</tr>
+		<tr th:each="p:${page.result }">
+			<td th:text="${p.id }">流程id</td>
+			<td th:text="${p.processInstanceId }">流程实例ID</td>
+			<td th:text="${p.processDefinitionId }">流程定义ID</td>
+			<td th:text="${p.name }">流程名称</td>
+			<td><a class="trace" href='#' th:pid="${p.id}" th:pdid="${p.processDefinitionId}" title="点击查看流程图" th:text="${#pdCaches.getActivityName(p.processDefinitionId, p.activityId)}">activityName</a></td>
+			<td th:text="${p.suspended }">false</td>
+			<td>
+				<a th:if="${p.suspended }" th:href="@{'/management/process/update/instance/'+${p.processInstanceId}+'/active'}" onclick="return confirmx('确认要激活该流程吗？', this.href)">激活</a>
+				<a th:if="${!p.suspended }" th:href="@{'/management/process/update/instance/'+${p.processInstanceId}+'/suspend'}" onclick="return confirmx('确认要挂起该流程吗？', this.href)">挂起</a>
+			</td>
+		</tr>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+</body>
+</html>

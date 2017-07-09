@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>已结束列表</title>
+    <!-- <link href="${ctx }/js/common/plugins/jui/extends/timepicker/jquery-ui-timepicker-addon.css" type="text/css" rel="stylesheet" />
+    <link href="${ctx }/js/common/plugins/qtip/jquery.qtip.min.css" type="text/css" rel="stylesheet" /> -->
+</head>
+
+<body>
+	<table class="table table-bordered table-hover table-condensed">
+		<tr>
+			<th>流程ID</th>
+			<th>流程定义ID</th>
+			<th>流程名称</th>
+			<th>流程启动人</th>
+			<th>流程启动时间</th>
+			<th>流程结束时间</th>
+			<th>流程是否结束</th>
+		</tr>
+
+		<tr th:each="hpi:${page.result}">
+			<td th:text="${hpi.id}"></td>
+			<td th:text="${hpi.processDefinitionId}"></td>
+			<td th:text="${hpi.name}"></td>
+			<td th:text="${hpi.startUserId}"></td>
+			<td th:text="${hpi.startTime != null ? #dates.format(hpi.startTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
+			<td th:text="${hpi.endTime != null ? #dates.format(hpi.endTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
+			<td th:text="${hpi.endTime != null ? (#strings.isEmpty(hpi.deleteReason) ? '正常结束' : hpi.deleteReason) : '运行中'}"></td>
+		</tr>
+	</table>
+	<tags:pagination page="${page}" paginationSize="${page.pageSize}"/>
+	<!-- 办理任务对话框 -->
+	<div id="handleTemplate" class="template"></div>
+
+</body>
+</html>

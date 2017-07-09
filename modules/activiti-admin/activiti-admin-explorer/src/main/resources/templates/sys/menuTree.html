@@ -1,0 +1,15 @@
+<div class="accordion" th:id="${'menu-' + param.parentId}">
+<div class="accordion-group" th:each="m,mStat:${menulist}" th:if="${m.isShow eq '1'}">
+	<div class="accordion-heading">
+		<a class="accordion-toggle" data-toggle="collapse" th:data-parent="${'#menu-' + param.parentId}" th:data-href="${'#collapse-'+m.id}" th:href="${'#collapse-' + m.id}" th:title="${m.remarks}" th:inline="text"><i th:class="${'icon-chevron-' + (mStat.index eq 0 ? 'down' : 'right')}"></i>&nbsp;[[${m.name}]]</a>
+	</div>
+	<div th:id="${'collapse-'+m.id}" th:class="${'accordion-body collapse ' + (mStat.index eq 0 ? 'in' : '')}">
+		<div class="accordion-inner">
+			<ul class="nav nav-list">
+				<li th:each="m2,m2Stat:${m.children}">
+				<a th:inline="text" th:data-href="${'.menu3-'+ m2.id}" th:href="${#strings.isEmpty(m2.href) ? (#httpServletRequest.contextPath + '/404') : ((#strings.startsWith(m2.href, 'http') ? '' : #httpServletRequest.contextPath) + m2.href)}" th:target="${#strings.isEmpty(m2.target) ? 'mainFrame' : m2.target }" ><i th:class="${'icon-' + (#strings.isEmpty(m2.icon) ? 'circle-arrow-right' : m2.icon)}"></i>&nbsp;[[${m2.name}]]</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>流程列表</title>
+
+    <script type="text/javascript">
+    $(function() {
+    	$('#deploy').click(function() {
+    		$('#deployFieldset').toggle('normal');
+    	});
+    });
+    </script>
+</head>
+<body>
+	<div th:replace="/common/fragment::message">信息</div>
+	<div style="text-align: right;padding: 2px 1em 2px">
+		<div id="message" class="info" style="display:inline;"><b>提示：</b>点击xml或者png链接可以查看具体内容！</div>
+		<a id="deploy" href="#" class="btn btn-info">部署流程</a>
+		<a id="redeploy" class="btn btn-info" th:href="@{/management/process/redeploy/all}" style="display:none">重新部署流程</a>
+	</div>
+	<fieldset id="deployFieldset" style="display: none">
+		<legend>部署新流程</legend>
+		<div><b>支持文件格式：</b>zip、bar、bpmn、bpmn20.xml</div>
+		<form th:action="@{/management/process/deploy}" method="post" enctype="multipart/form-data">
+			<input type="file" name="file"/>
+			<input type="submit" value="Submit" class="btn btn-primary"/>
+		</form>
+	</fieldset>
+	<table width="100%" class="table table-bordered table-hover table-condensed">
+		<thead>
+			<tr>
+				<th>流程定义ID</th>
+				<th>流程部署ID</th>
+				<th>流程名称</th>
+				<th>KEY</th>
+				<th>版本号</th>
+				<th>XML</th>
+				<th>图片</th>
+				<th>部署时间</th>
+				<th>是否挂起</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="object:${page.result}" th:with="process=${object[0]},deployment=${object[1]}">
+				<td th:text="${process.id }">PROCESS_ID</td>
+				<td th:text="${process.deploymentId }">DEPLOYMENT_ID</td>
+				<td th:text="${process.name }">PROCESS_NAME</td>
+				<td th:text="${process.key }">PROCESS_KEY</td>
+				<td th:text="${process.version }">PROCESS_VERSION</td>
+				<td><a class="ellipsis" style="max-width: 400px;" target="_blank" th:href="@{${'/management/resource/process-definition/'+process.id+'/xml'}}" th:text="${process.resourceName }" th:title="${process.resourceName }">PROCESS_RESOURCENAME</a></td>
+				<td><a class="ellipsis" style="max-width: 300px;" target="_blank" th:href="@{${'/management/resource/process-definition/'+process.id+'/image'}}" th:text="${process.diagramResourceName }" th:title="${process.diagramResourceName }">PROCESS_DIAGRAM_RESOURCENAME</a></td>
+				<td th:text="${deployment.deploymentTime != null ? #dates.format(deployment.deploymentTime,'yyyy-MM-dd HH:mm:ss') : ''}">DEPLOYMENT_TIME</td>
+				<td th:inline="text"> [[${process.suspended}]] |
+					<a th:if="${process.suspended }" th:href="@{${'/management/process/update/definition/'+process.id+'/active'}}">激活</a>
+					<a th:if="${!process.suspended }" th:href="@{${'/management/process/update/definition/'+process.id+'/suspend'}}">挂起</a>
+				</td>
+				<td>
+                    <a th:href="@{${'/management/process/delete/deployment/'+ process.deploymentId}}"  onclick="return confirmx('确认要删除该流程定义吗？一旦删除该流程实例、任务等将会一并删除', this.href)">删除</a>
+                    <a th:href="@{${'/management/process/definition/'+ process.id + '/convert-to-model'}}"  onclick="return confirmx('确认要将该流程转换为流程模型吗？', this.href)">转换为模型</a>
+                </td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+</body>
+</html>

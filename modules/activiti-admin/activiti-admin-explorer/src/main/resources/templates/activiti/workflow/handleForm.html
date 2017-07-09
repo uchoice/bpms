@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>处理流程</title>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("form").validate({
+				submitHandler: function(form){
+					loading('正在提交，请稍等...');
+					form.submit();
+				},
+				errorContainer: "#messageBox",
+				errorPlacement: function(error, element) {
+					$("#messageBox").text("输入有误，请先更正。");
+					if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+						error.appendTo(element.parent().parent());
+					} else {
+						error.insertAfter(element);
+					}
+				}
+			});
+			$("input.datetime").click(function(){
+				WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'});
+			});
+		});
+	</script>
+</head>
+
+<body>
+	<form th:action="@{'/workflow/task/complete/' + ${taskId}}" method="post" th:utext="${form}">
+	
+	</form>
+</body>
+</html>

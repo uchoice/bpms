@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>跟踪流程</title>
+	<script th:src="@{/static/qtip/jquery.qtip.min.js}" type="text/javascript"></script>
+	<link th:href="@{/static/qtip/jquery.qtip.min.css}" rel="stylesheet" type="text/css"/>
+	<script type="text/javascript" th:inline="javascript">
+		$(function(){
+			var pid = [[${pid}]];
+			var pdid = [[${pdid}]];
+			
+			// 处理使用js跟踪当前节点坐标错乱问题
+		    $('#changeImg').live('click', function() {
+		        $('#workflowTraceDialog').dialog('close');
+		        if ($('#imgDialog').length > 0) {
+		            $('#imgDialog').remove();
+		        }
+		        $('<div/>', {
+		            'id': 'imgDialog',
+		            title: '此对话框显示的图片是由引擎自动生成的，并用红色标记当前的节点<button id="diagram-viewer">Diagram-Viewer</button>',
+		            html: "<img src='/management/trace/image/process-instance/" + pid + "' />"
+		        }).appendTo('body').dialog({
+		            modal: true,
+		            resizable: false,
+		            dragable: false,
+		            width: document.documentElement.clientWidth * 0.95,
+		            height: document.documentElement.clientHeight * 0.95
+		        });
+		    });
+		
+			/*
+			用官方开发的Diagram-Viewer跟踪
+			 */
+			$('#diagram-viewer').live('click', function() {
+				$('#workflowTraceDialog').hide();
+		
+				if ($('#imgDialog').length > 0) {
+					$('#imgDialog').remove();
+				}
+				var url = '/diagram-viewer/index.html?processDefinitionId=' + pdid + '&processInstanceId=' + pid;
+				$('<div/>', {
+					'id': 'imgDialog',
+					title: '此对话框显示的图片是由引擎自动生成的，并用红色标记当前的节点',
+					html: '<iframe src="' + url + '" width="100%" />'
+				}).appendTo('body');
+			});
+			
+			// 获取图片资源
+	    	var imageUrl = "/management/resource/process-instance/" + pid + "/image";
+	    	$.getJSON('/management/trace/process-instance/' + pid, function(infos) {
+	
+		        var positionHtml = "";
+		        // 生成图片
+		        var varsArray = new Array();
+		        $.each(infos, function(i, v) {
+		            var $positionDiv = $('<div/>', {
+		                'class': 'activity-attr'
+		            }).css({
+		                position: 'absolute',
+		                left: (v.x - 1),
+		                top: (v.y - 1),
+		                width: (v.width - 2),
+		                height: (v.height - 2),
+		                backgroundColor: 'black',
+		                opacity: 0,
+		                zIndex: $.fn.qtip.zindex - 1
+		            });
+		
+		            // 节点边框
+		            var $border = $('<div/>', {
+		                'class': 'activity-attr-border'
+		            }).css({
+		                position: 'absolute',
+		                left: (v.x - 1),
+		                top: (v.y - 1),
+		                width: (v.width - 4),
+		                height: (v.height - 3),
+		                zIndex: $.fn.qtip.zindex - 2
+		            });
+		
+		            if (v.currentActiviti) {
+		                $border.addClass('ui-corner-all-12').css({
+		                    border: '3px solid red'
+		                });
+		            }
+		            positionHtml += $positionDiv.prop("outerHTML") + $border.prop("outerHTML");
+		            varsArray[varsArray.length] = v.vars;
+		        });
+		        
+		        var dialogHtml = 
+	            $('<div/>', {
+	                id: 'workflowTraceDialog',
+	                html: "<div style='position:relative;'><img src='" + imageUrl + "' style='position:absolute; left:0px; top:0px;' />" +
+	                "<div id='processImageBorder'>" +
+	                positionHtml +
+	                "</div>" +
+	                "</div>"
+	            }).appendTo('body');
+	
+	        	// 设置每个节点的data
+		       $('.activity-attr').each(function(i, v) {
+		            $(this).data('vars', varsArray[i]);
+		        });
+		        
+		        // 此处用于显示每个节点的信息，如果不需要可以删除
+	            $('.activity-attr').qtip({
+	                content: function() {
+	                        var vars = $(this).data('vars');
+	                        var tipContent = "<table class='need-border'>";
+	                        $.each(vars, function(varKey, varValue) {
+	                            if (varValue) {
+	                                tipContent += "<tr><td>" + varKey + "</td><td>" + varValue + "<td/></tr>";
+	                            }
+	                        });
+	                        tipContent += "</table>";
+	                        return tipContent;
+	                    },
+	                 position: {
+	                        at: 'bottom left',
+	                        adjust: {
+	                            x: 3
+	                        }
+	                    }
+	             });
+	         });
+		});
+	</script>
+</head>
+
+<body>
+	<div><button id="changeImg" class="jbox-button">如果坐标错乱请点击这里</button><button id="diagram-viewer" class="jbox-button">Diagram-Viewer</button></div>
+	<!-- <div id="workflowTraceDialog">
+		<div style="position:relative;">
+			<img th:src="@{${'/management/resource/process-instance/' + pid + '/image'}}" style="position:absolute; left:0px; top:0px;" />
+			<div id="processImageBorder">
+				<div th:each="v:${infos}">
+					<div class="activity-attr" th:style="${'position:absolute;left:'+ (v.x-1) + ';top:' + (v.y-1) + ';width:'+ (v.width-2) + ';height:' + (v.height-2) + ';backgroundColor:black;opacity: 0;zIndex:0;' }"></div>
+					<div class="activity-attr-border" th:if="${v.currentActiviti}" th:style="${'position:absolute;left:'+ (v.x-1) + ';top:' + (v.y-1) + ';width:'+ (v.width-4) + ';height:' + (v.height-3) + ';zIndex:-1; border:3px solid red;' }" class="ui-corner-all-12" ></div>
+					<div class="activity-attr-border" th:if="${!v.currentActiviti}" th:style="${'position:absolute;left:'+ (v.x-1) + ';top:' + (v.y-1) + ';width:'+ (v.width-4) + ';height:' + (v.height-3) + ';zIndex:-1;' }"></div>
+				</div>
+			</div>
+		</div>
+	</div> -->
+</body>
+</html>

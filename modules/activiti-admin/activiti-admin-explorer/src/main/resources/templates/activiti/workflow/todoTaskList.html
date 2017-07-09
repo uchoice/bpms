@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>待办任务列表</title>
+    <script th:src="@{/static/activiti/process-list.js}" type="text/javascript"></script>
+    <script th:src="@{/static/activiti/workflow.js}" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(function() {
+			// 跟踪
+		    $('.trace').click(graphTrace);
+		});
+	</script>
+</head>
+
+<body>
+	<div th:replace="/common/fragment::message">信息</div>
+	<table class="table table-bordered table-hover table-condensed">
+		<thead>
+			<tr>
+				<th>任务ID</th>
+				<th>任务Key</th>
+				<th>任务名称</th>
+				<th>流程定义ID</th>
+				<th>流程实例ID</th>
+				<th>优先级</th>
+				<th>任务创建日期</th>
+				<th>任务有效期</th>
+				<th>任务描述</th>
+				<th>任务所属人</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="task:${page.result}">
+				<td th:text="${task.id}"></td>
+				<td th:text="${task.taskDefinitionKey}"></td>
+				<td><a class="trace" href='#' th:pid="${task.processInstanceId}" th:pdid="${task.processDefinitionId}" title="点击查看流程图" th:text="${task.name }">activityName</a></td>
+				<td th:text="${task.processDefinitionId}"></td>
+				<td th:text="${task.processInstanceId}"></td>
+				<td th:text="${task.priority}"></td>
+				<td th:text="${task.createTime != null ? #dates.format(task.createTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
+				<td th:text="${task.dueDate != null ? #dates.format(task.dueDate,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
+				<td th:text="${task.description}"></td>
+				<td th:text="${task.owner}"></td>
+				<td>
+					<a th:if="${#strings.isEmpty(task.assignee)}" class="claim" th:href="@{${'/workflow/task/claim/'+task.id}}"  onclick="return confirmx('确认要签收该任务吗？', this.href)">签收</a>
+					<!-- 此处用tkey记录当前节点的名称 -->
+					<a th:if="${!#strings.isEmpty(task.assignee)}" class="handle" th:tkey='${task.taskDefinitionKey}' th:tname='${task.name}' th:tid='${task.id}' href="#">办理</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+</body>
+</html>

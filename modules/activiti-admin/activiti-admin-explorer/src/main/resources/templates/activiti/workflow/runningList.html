@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>运行中流程列表</title>
+	<script type="text/javascript">
+	$(function() {
+		// 跟踪
+	    $('.trace').click(graphTrace);
+	});
+	</script>
+</head>
+
+<body>
+	<div th:replace="/common/fragment::message">信息</div>
+	<table class="table table-bordered table-hover table-condensed">
+		<tr>
+			<th>执行ID</th>
+			<th>流程实例ID</th>
+			<th>流程定义ID</th>
+			<th>当前节点</th>
+			<th>是否挂起</th>
+		</tr>
+
+		<tr th:each="p:${page.result}">
+			<td th:text="${p.id}"></td>
+			<td th:text="${p.processInstanceId}"></td>
+			<td th:text="${p.processDefinitionId}"></td>
+			<td><a class="trace" href='#' th:pid="${p.id}" th:pdid="${p.processDefinitionId}" title="点击查看流程图" th:text="${#pdCaches.getActivityName(p.processDefinitionId, p.activityId)}">activityName</a></td>
+			<td th:text="${p.suspended}"></td>
+		</tr>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+	<!-- 办理任务对话框 -->
+	<div id="handleTemplate" class="template"></div>
+
+</body>
+</html>

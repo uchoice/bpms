@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+    <title>组列表--management</title>
+    <script type="text/javascript" th:inline="javascript">
+        $(function() {
+            $('.edit-group').click(function() {
+                var $tr = $('#' + $(this).data('id'));
+                $('#groupId').val($tr.find('.prop-id').text());
+                $('#groupName').val($tr.find('.prop-name').text());
+                $('#type').val($tr.find('.prop-type').text());
+            });
+	        var msg = [[${message}]];
+	        var errMsg = [[${errorMsg}]];
+	        if(msg != null && msg != undefined && msg != ''){
+	        	setTimeout(function() {
+	                $('#message').hide('slow');
+	            }, 5000);
+	        }
+	        if(errMsg != null && errMsg != undefined && errMsg != ''){
+	        	setTimeout(function() {
+	                $('#messageError').hide('slow');
+	            }, 5000);
+	        }
+        });
+    </script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+	    <li><a th:href="@{/management/identity/user/list}"><i class="icon-user"></i>用户管理</a></li>
+	    <li class="active"><a href="@{/management/identity/group/list}"><i class="icon-list"></i>组管理</a></li>
+	</ul>
+	<hr>
+    <div id="message" class="alert alert-success" th:if="${!#strings.isEmpty(message)}" th:text="${message}"></div>
+    <div id="messageError" class="alert alert-error" th:if="${!#strings.isEmpty(errorMsg)}" th:text="${errorMsg}"></div>
+	<div class="row-fluid">
+    	<div class="span8">
+        	<fieldset>
+            	<legend><small>组列表</small></legend>
+            	<table width="100%" class="table table table-bordered table-hover table-condensed">
+                	<thead>
+		                <tr>
+		                    <th>组ID</th>
+		                    <th>组名称</th>
+		                    <th>类型</th>
+		                    <th width="140">操作</th>
+		                </tr>
+                	</thead>
+	                <tbody>
+	                    <tr th:each="group:${page.result }" th:id="${group.id}">
+	                        <td class="prop-id" th:text="${group.id}">ID</td>
+	                        <td class="prop-name" th:text="${group.name}">NAME</td>
+	                        <td class="prop-type" th:text="${group.type}">类型</td>
+	                        <td>
+	                            <a class="btn btn-danger btn-small" th:href="@{${'/management/identity/group/delete/' + group.id}}"><i class="icon-remove"></i>删除</a>
+	                            <a class="btn btn-info btn-small edit-group" th:data-id="${group.id}" href="#"><i class="icon-pencil"></i>编辑</a>
+	                        </td>
+	                    </tr>
+	                </tbody>
+            	</table>
+           	<div class="pagination" th:utext="${page}"></div>
+        </fieldset>
+	    </div>
+	    <div class="span4">
+	        <form th:action="@{/management/identity/group/save}" class="form-horizontal" method="post">
+	            <input type="hidden" name="id"/>
+	            <fieldset>
+	                <legend><small>新增/编辑组</small></legend>
+	                <div id="messageBox" class="alert alert-error input-large controls" style="display:none">输入有误，请先更正。</div>
+	                <div class="control-group">
+	                    <label for="groupId" class="control-label">组ID:</label>
+	                    <div class="controls">
+	                        <input type="text" id="groupId" name="groupId" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="groupName" class="control-label">组名:</label>
+	                    <div class="controls">
+	                        <input type="text" id="groupName" name="groupName" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="type" class="control-label">组类型:</label>
+	                    <div class="controls">
+	                        <select name="type" id="type" class="required">
+	                            <option value="feature-role">功能角色</option>
+	                            <option value="security-role">安全角色</option>
+	                        </select>
+	                    </div>
+	                </div>
+	                <div class="form-actions">
+	                    <button type="reset" class="btn"><i class="icon-remove"></i>重置</button>
+	                    <button type="submit" class="btn btn-primary"><i class="icon-ok-sign"></i>保存</button>
+	                </div>
+	            </fieldset>
+	        </form>
+	    </div>
+	</div>
+</body>
+</html>

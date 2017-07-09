@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+    <!-- <link th:href="@{/static/form-design/css/bootstrap/css/bootstrap.css?2023}" rel="stylesheet" type="text/css" /> -->
+    <!--[if lte IE 6]>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/css/bootstrap-ie6.css?2023">
+    <![endif]-->
+    <!--[if lte IE 7]>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/css/ie.css?2023">
+    <![endif]-->
+    <link th:href="@{/static/form-design/css/site.css?2023}" rel="stylesheet" type="text/css" />
+	<script type="text/javascript" charset="utf-8" th:src="@{/static/form-design/js/ueditor/ueditor.config.js?2023}"></script>
+	<script type="text/javascript" charset="utf-8" th:src="@{/static/form-design/js/ueditor/ueditor.all.js?2023}"> </script>
+	<script type="text/javascript" charset="utf-8" th:src="@{/static/form-design/js/ueditor/lang/zh-cn/zh-cn.js?2023}"></script>
+	<script type="text/javascript" charset="utf-8" th:src="@{/static/form-design/js/ueditor/formdesign/leipi.formdesign.v4.js?2023}"></script>
+ </head>
+<body>
+	<div th:utext="${actForm.content}"></div>
+</body>
+</html>

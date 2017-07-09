@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+    <title>用户列表--management</title>
+    <script type="text/javascript" th:inline="javascript">
+        $(function() {
+            $('.edit-user').click(function() {
+                var $tr = $('#' + $(this).data('id'));
+                $('#userId').val($tr.find('.prop-id').text());
+                $('#firstName').val($tr.find('.prop-firstName').text());
+                $('#lastName').val($tr.find('.prop-lastName').text());
+                $('#email').val($tr.find('.prop-email').text());
+            });
+
+            // 组提示
+            $('.groups').tooltip();
+
+            // 点击按钮设置用户的组
+            $('.set-group').click(function() {
+                $('#setGroupsModal input[name=userId]').val($(this).data('userid'));
+                $('#setGroupsModal input[name=group]').attr('checked', false);
+                var groupIds = $(this).data('groupids');
+                if(groupIds){
+	               groupIds = groupIds.split(',');
+                } else {
+                	groupIds = new Array();
+                }
+                $(groupIds).each(function() {
+                    $('#setGroupsModal input[name=group][value=' + this + ']').attr('checked', true);
+                });
+                $('#setGroupsModal').modal();
+            });
+            $("#setGroupsSubmit").click(function() {
+            	if($(this).is(":visible")){
+	            	$("#setGroupsModal form").submit();
+            	}
+            });
+            var msg = [[${message}]];
+	        var errMsg = [[${errorMsg}]];
+	        if(msg != null && msg != undefined && msg != ''){
+	        	setTimeout(function() {
+	                $('#message').hide('slow');
+	            }, 5000);
+	        }
+	        if(errMsg != null && errMsg != undefined && errMsg != ''){
+	        	setTimeout(function() {
+	                $('#messageError').hide('slow');
+	            }, 5000);
+	        }
+        });
+    </script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+	    <li class="active"><a th:href="@{/management/identity/user/list}"><i class="icon-user"></i>用户管理</a></li>
+	    <li><a th:href="@{/management/identity/group/list}"><i class="icon-list"></i>组管理</a></li>
+	</ul>
+	<hr>
+	<div id="message" class="alert alert-success" th:if="${!#strings.isEmpty(message)}" th:text="${message}"></div>
+    <div id="messageError" class="alert alert-error" th:if="${!#strings.isEmpty(errorMsg)}" th:text="${errorMsg}"></div>
+	<div class="row-fluid">
+	    <div class="span8">
+	        <fieldset>
+	            <legend><small>用户列表</small></legend>
+	            <table width="100%" class="table table-bordered table-hover table-condensed">
+	                <thead>
+	                <tr>
+	                    <th>用户ID</th>
+	                    <th>姓名</th>
+	                    <th>Email</th>
+	                    <th>所属组</th>
+	                    <th width="130">操作</th>
+	                </tr>
+	                </thead>
+	                <tbody>
+	                    <tr th:each="user:${page.result}" th:id="${user.id}" th:with="grps=${groupOfUsers[user.id]}">
+	                        <td class="prop-id" th:text="${user.id}"></td>
+	                        <td th:inline="text">
+	                                [[${user.lastName}]] [[${user.firstName}]]
+	                            <span class="prop-firstName" style="display: none" th:text="${user.firstName}">名</span>
+	                            <span class="prop-lastName" style="display: none" th:text="${user.lastName}">姓</span>
+	                        </td>
+	                        <td class="prop-email" th:text="${user.email}">email@email.com</td>
+	                        <td data-container="body" th:title="${#strings.isEmpty(grps[1]) ? '还未设置所属组，请单击设置' : grps[1]}" class="groups">
+	                            <a href="#" class="set-group" th:data-groupids="${grps[0]}" th:data-userid="${user.id}" data-toggle="modal" th:inline="text">共[[${#strings.arraySplit(grps[0] , ',').length}]]个组</a><br>
+	                        </td>
+	                        <td>
+	                            <a class="btn btn-danger btn-small" th:href="@{${'/management/identity/user/delete/' + user.id}}"><i class="icon-remove"></i>删除</a>
+	                            <a class="btn btn-info btn-small edit-user" th:data-id="${user.id}" href="#"><i class="icon-pencil"></i>编辑</a>
+	                        </td>
+	                    </tr>
+	                </tbody>
+	            </table>
+	            <div class="pagination" th:utext="${page}"></div>
+	        </fieldset>
+	    </div>
+	
+	    <!-- 新增、编辑用户的Model -->
+	    <div class="span4">
+	        <form th:action="@{/management/identity/user/save}" class="form-horizontal" method="post">
+	            <fieldset>
+	                <legend><small>新增/编辑用户</small></legend>
+	                <div id="messageBox" class="alert alert-error input-large controls" style="display:none">输入有误，请先更正。</div>
+	                <div class="control-group">
+	                    <label for="userId" class="control-label">用户ID:</label>
+	                    <div class="controls">
+	                        <input type="text" id="userId" name="userId" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="lastName" class="control-label">姓:</label>
+	                    <div class="controls">
+	                        <input type="text" id="lastName" name="lastName" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="firstName" class="control-label">名:</label>
+	                    <div class="controls">
+	                        <input type="text" id="firstName" name="firstName" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="email" class="control-label">Email:</label>
+	                    <div class="controls">
+	                        <input type="text" id="email" name="email" class="required" />
+	                    </div>
+	                </div>
+	                <div class="control-group">
+	                    <label for="password" class="control-label">密码:</label>
+	                    <div class="controls">
+	                        <input type="password" id="password" name="password" class="required" />
+	                    </div>
+	                </div>
+	                <div class="form-actions">
+	                    <button type="reset" class="btn"><i class="icon-remove"></i>重置</button>
+	                    <button type="submit" class="btn btn-primary"><i class="icon-ok-sign"></i>保存</button>
+	                </div>
+	            </fieldset>
+	        </form>
+	    </div>
+	</div>
+	<div id="setGroupsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="setGroupsModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			    <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			        <h3 id="setGroupsModalLabel">设置用户的所属组</h3>
+			    </div>
+			    <div class="modal-body">
+			        <form th:action="@{/management/identity/group/set}" method="POST">
+			             <input type="hidden" name="userId" />
+				         <div class="span2" th:each="group:${allGroup}">
+				              <input type="checkbox" name="group" th:id="${'grp_check_' + group.id}" th:value="${group.id}" class="checkbox" /><label th:for="${'grp_check_' + group.id}" class="checkbox" th:text="${group.name}"></label>
+				         </div>
+			        </form>
+			    </div>
+			    <div class="modal-footer">
+			        <button id="setGroupsSubmit" class="btn btn-primary">确定</button>
+			        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+			    </div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

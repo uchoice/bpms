@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head"/>
+	<title>所有任务</title>
+	<script th:src="@{/static/activiti/process-list.js}" type="text/javascript"></script>
+	<script th:src="@{/static/activiti/workflow.js}" type="text/javascript"></script>
+	<script th:src="@{/static/common/sort.js}" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(function() {
+			// 跟踪
+		    $('.trace').click(graphTrace);
+		});
+	</script>
+</head>
+
+<body>
+	<form id="searchForm" modelAttribute="inspection" th:action="@{/management/history/task/list}" method="post" class="breadcrumb form-search">
+		<input id="pageNo" name="pageNo" type="hidden" th:value="${page.pageNo}"/>
+		<input id="pageSize" name="pageSize" type="hidden" th:value="${page.pageSize}"/>
+		<input id="orderBy" name="orderBy" type="hidden" th:value="${page.orderBy}"/>
+		<ul class="ul-form">
+			<li><label>是否办结：</label>
+				<select name="finish" class="input-medium">
+					<option value="" th:selected="${finish==''}">全部</option>
+					<option value="1" th:selected="${finish=='1'}">已办结</option>
+					<option value="0" th:selected="${finish=='0'}">未办理</option>
+				</select>
+			</li>
+			<li><label>所有人：</label>
+				<input type="text"  class="input-medium" name="owner" th:value="${owner}"/>
+			</li>
+			<li><label>办理人：</label>
+				<input type="text"  class="input-medium" name="assign" th:value="${assign}"/>
+			</li>
+			<li class="btns"><input id="btnSubmit" class="btn btn-primary" type="submit" value="查询"/></li>
+			<li class="clearfix"></li>
+		</ul>
+	</form>
+	<div th:replace="/common/fragment::message">信息</div>
+	<table width="100%" class="table table-bordered table-hover table-condensed">
+		<thead>
+			<tr>
+				<th>任务ID</th>
+				<th>流程实例ID</th>
+				<th>流程定义ID</th>
+				<th>任务名称</th>
+				<th>任务所有人</th>
+				<th>任务办理人</th>
+				<th class="sort-column createTime">任务开始时间</th>
+				<th>任务签收时间</th>
+				<th class="sort-column endTime">任务完成时间</th>
+				<th class="sort-column dueDate">任务有效期</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="hpt:${page.result }">
+				<td th:text="${hpt.id }">任务ID</td>
+				<td th:text="${hpt.processInstanceId }">流程实例ID</td>
+				<td th:text="${hpt.processDefinitionId }">流程定义ID</td>
+				<td><a class="trace" href='#' th:pid="${hpt.processInstanceId}" th:pdid="${hpt.processDefinitionId}" title="点击查看流程图" th:text="${hpt.name }">activityName</a></td>
+				<td th:text="${hpt.owner }">任务所有人</td>
+				<td th:text="${hpt.assignee }">任务办理人</td>
+				<td th:text="${hpt.startTime != null ? #dates.format(hpt.startTime,'yyyy-MM-dd HH:mm:ss') : ''}">任务开始时间</td>
+				<td th:text="${hpt.claimTime != null ? #dates.format(hpt.claimTime,'yyyy-MM-dd HH:mm:ss') : ''}">任务签收时间</td>
+				<td th:text="${hpt.endTime != null ? #dates.format(hpt.endTime,'yyyy-MM-dd HH:mm:ss') : ''}">任务完成时间</td>
+				<td th:text="${hpt.dueDate != null ? #dates.format(hpt.dueDate,'yyyy-MM-dd HH:mm:ss') : ''}">任务有效期</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+</body>
+</html>

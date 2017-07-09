@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>流程列表</title>
+    <script type="text/javascript">
+	    $(function() {
+	    	$('#create').on('click',function(){
+	    		$('#createModelModal').modal();
+	    	});
+	    	$("#createModelSubmit").on('click',function(){
+	        	if($(this).is(":visible")){
+	            	$("#createModelModal form").submit();
+	        	}
+	        });
+	    });
+	
+		function showSvgTip() {
+			alert('点击"编辑"链接,在打开的页面中打开控制台执行\njQuery(".ORYX_Editor *").filter("svg")\n即可看到svg标签的内容.');
+		}
+    </script>
+</head>
+<body>
+	<div th:replace="/common/fragment::message">信息</div>
+	<div style="text-align: right"><button id="create" class="btn btn-info">创建</button></div>
+	<table width="100%" class="table table table-bordered table-hover table-condensed">
+		<thead>
+			<tr>
+				<th>模型ID</th>
+				<th>KEY</th>
+				<th>模型名称</th>
+				<th>模型版本</th>
+				<th>创建时间</th>
+				<th>最后更新时间</th>
+				<th>元数据</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="model:${list}">
+				<td th:text="${model.id }">ID</td>
+				<td th:text="${model.key }">KEY</td>
+				<td th:text="${model.name }">NAME</td>
+				<td th:text="${model.version }">VERSION</td>
+				<td th:text="${model.createTime != null ? #dates.format(model.createTime ,'yyyy-MM-dd HH:mm:ss') : ''}">CREATE_TIME</td>
+				<td th:text="${model.lastUpdateTime != null ? #dates.format(model.lastUpdateTime ,'yyyy-MM-dd HH:mm:ss') : ''}">LAST_UPDATE_TIME</td>
+				<td th:title="${model.metaInfo }"><span class="ellipsis" style="max-width: 400px;" th:text="${model.metaInfo }"></span></td>
+				<td>
+					<a th:href="@{'/modeler.html?modelId='+ ${model.id}}" target="_blank">编辑</a>
+					<a th:href="@{'/management/model/deploy/'+ ${model.id}}"  onclick="return confirmx('确认要部署该流程模型吗？', this.href)">部署</a>
+					导出(<a th:href="@{'/management/model/export/'+${model.id}+'/bpmn'}" target="_blank">BPMN</a>
+					|&nbsp;<a th:href="@{'/management/model/export/'+${model.id}+'/json'}" target="_blank">JSON</a>
+					|&nbsp;<a href="javascript:;" onclick='showSvgTip()'>SVG</a>)
+                       <a th:href="@{'/management/model/delete/'+${model.id}}" onclick="return confirmx('确认要删除该流程模型吗？', this.href)">删除</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<div id="createModelModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="createModelModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			    <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			        <h3 id="createModelModalLabel">创建新模型</h3>
+			    </div>
+			    <div class="modal-body">
+			        <form id="modelForm" th:action="@{/management/model/create}" target="_blank" method="post">
+						<table>
+							<tr>
+								<td>名称：</td>
+								<td>
+									<input id="name" name="name" type="text" />
+								</td>
+							</tr>
+							<tr>
+								<td>KEY：</td>
+								<td>
+									<input id="key" name="key" type="text" />
+								</td>
+							</tr>
+							<tr>
+								<td>描述：</td>
+								<td>
+									<textarea id="description" name="description" style="width:300px;height: 50px;"></textarea>
+								</td>
+							</tr>
+						</table>
+			        </form>
+			    </div>
+			    <div class="modal-footer">
+			        <button id="createModelSubmit" data-dismiss="modal" class="btn btn-primary">确定</button>
+			        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+			    </div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
