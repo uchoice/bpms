@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipInputStream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,10 +18,14 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import net.uchoice.activiti.cmd.JumpActivityCmd;
+import net.uchoice.activiti.entity.ActForm;
+import net.uchoice.activiti.service.ActFormService;
 import net.uchoice.activiti.util.WorkflowUtils;
 import net.uchoice.common.persistence.Page;
 
 import org.activiti.bpmn.converter.BpmnXMLConverter;
+import org.activiti.bpmn.converter.XMLStreamReaderUtil;
+import org.activiti.bpmn.converter.util.InputStreamProvider;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.editor.constants.ModelDataJsonConstants;
 import org.activiti.editor.language.json.converter.BpmnJsonConverter;
@@ -28,7 +33,10 @@ import org.activiti.engine.ManagementService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.impl.interceptor.Command;
+import org.activiti.engine.impl.persistence.deploy.Deployer;
+import org.activiti.engine.impl.util.io.InputStreamSource;
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.Model;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.repository.ProcessDefinitionQuery;
@@ -36,6 +44,7 @@ import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.runtime.ProcessInstanceQuery;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.input.XmlStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +63,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 /**
  * 流程管理控制器
@@ -72,6 +82,8 @@ public class ProcessDefinitionController {
 	private RuntimeService runtimeService;
 	@Autowired
 	private ManagementService managementService;
+	@Autowired
+	ActFormService actFormService;
 
 	/**
 	 * 流程定义列表
@@ -151,7 +163,7 @@ public class ProcessDefinitionController {
 	 * @return
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/redeploy/all")
+	/*@RequestMapping(value = "/redeploy/all")
 	public String redeployAll() throws Exception {
 		Collection<File> files = FileUtils.listFiles(new File(exportDir),
 				new String[] { ".zip", ".bar" }, true);
@@ -181,7 +193,7 @@ public class ProcessDefinitionController {
 			}
 		}
 		return "redirect:/management/process/defined/list";
-	}
+	}*/
 
 	/**
 	 * 删除部署的流程，级联删除流程实例
@@ -206,27 +218,42 @@ public class ProcessDefinitionController {
 		String fileName = file.getOriginalFilename();
 
 		try {
-			InputStream fileInputStream = file.getInputStream();
 			Deployment deployment = null;
 
 			String extension = FilenameUtils.getExtension(fileName);
 			if (extension.equals("zip") || extension.equals("bar")) {
-				ZipInputStream zip = new ZipInputStream(fileInputStream);
+				ZipInputStream zip = new ZipInputStream(file.getInputStream());
 				deployment = repositoryService.createDeployment()
 						.addZipInputStream(zip).deploy();
 			} else {
-				deployment = repositoryService.createDeployment()
-						.addInputStream(fileName, fileInputStream).deploy();
+				BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(new InputStreamSource(file.getInputStream()), true, true);
+				List<String> formKeys = WorkflowUtils.getFormKeys(bpmnModel);
+				List<ActForm> forms = actFormService.findFormsByName(formKeys);
+				if(forms.size() != formKeys.size()){
+					Set<String> existsForms = Sets.newHashSet();
+					StringBuilder notExists  = new StringBuilder();
+					for(ActForm actForm:forms){
+						existsForms.add(actForm.getName());
+					}
+					for(String fkey:formKeys){
+						if(!existsForms.contains(fkey)){
+							notExists.append(fkey).append(",");
+						}
+					}
+					redirectAttributes.addFlashAttribute("message", "部署失败，流程中需要的表单"
+							+ notExists.substring(0, notExists.length() - 1) + "不存在");
+				} else {
+					DeploymentBuilder deploymentBuilder = repositoryService.createDeployment()
+							.addInputStream(fileName, file.getInputStream());
+					for(ActForm f:forms){
+						deploymentBuilder.addString(f.getName(), f.getContent());
+					}
+					deployment = deploymentBuilder.deploy();
+					redirectAttributes.addFlashAttribute("message", "部署成功，部署ID="
+							+ deployment.getId());
+				}
 			}
 
-			List<ProcessDefinition> list = repositoryService
-					.createProcessDefinitionQuery()
-					.deploymentId(deployment.getId()).list();
-
-			for (ProcessDefinition processDefinition : list) {
-				WorkflowUtils.exportDiagramToFile(repositoryService,
-						processDefinition, exportDir);
-			}
 			redirectAttributes.addFlashAttribute("message", "部署"
 					+ fileName + "成功");
 		} catch (Exception e) {

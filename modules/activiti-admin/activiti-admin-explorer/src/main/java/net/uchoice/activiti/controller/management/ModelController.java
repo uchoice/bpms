@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 
 import net.uchoice.activiti.entity.ActForm;
 import net.uchoice.activiti.service.ActFormService;
+import net.uchoice.activiti.util.WorkflowUtils;
 
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
@@ -126,7 +127,7 @@ public class ModelController {
 			BpmnModel model = new BpmnJsonConverter()
 					.convertToBpmnModel(modelNode);
 			bpmnBytes = new BpmnXMLConverter().convertToXML(model);
-			List<String> formKeys = formKeys(model);
+			List<String> formKeys = WorkflowUtils.getFormKeys(model);
 			List<ActForm> forms = actFormService.findFormsByName(formKeys);
 			if(forms.size() != formKeys.size()){
 				Set<String> existsForms = Sets.newHashSet();
@@ -158,25 +159,6 @@ public class ModelController {
 			redirectAttributes.addFlashAttribute("message", "模型部署失败，" + e.getMessage());
 		}
 		return "redirect:/management/model/list";
-	}
-	/**
-	 * 从bpmnModel中取出所有需要的formKeys
-	 * @param model model
-	 * @return
-	 */
-	private List<String> formKeys(BpmnModel model) {
-		List<Process> processes = model.getProcesses();
-		List<String> formkeys = Lists.newArrayList();
-		for (Process p : processes) {
-			for (FlowElement f : p.getFlowElements()) {
-				if (f instanceof StartEvent) {
-					formkeys.add(((StartEvent) f).getFormKey());
-				} else if (f instanceof UserTask) {
-					formkeys.add(((UserTask) f).getFormKey());
-				}
-			}
-		}
-		return formkeys;
 	}
 
 	/**

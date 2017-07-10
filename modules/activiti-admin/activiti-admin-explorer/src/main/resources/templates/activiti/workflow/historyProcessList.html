@@ -4,8 +4,13 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link th:replace="/common/fragment::head">
 	<title>已结束列表</title>
-    <!-- <link href="${ctx }/js/common/plugins/jui/extends/timepicker/jquery-ui-timepicker-addon.css" type="text/css" rel="stylesheet" />
-    <link href="${ctx }/js/common/plugins/qtip/jquery.qtip.min.css" type="text/css" rel="stylesheet" /> -->
+    <script th:src="@{/static/activiti/workflow.js}" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(function() {
+			// 跟踪
+		    $('.trace').click(graphTrace);
+		});
+	</script>
 </head>
 
 <body>
@@ -23,7 +28,7 @@
 		<tr th:each="hpi:${page.result}">
 			<td th:text="${hpi.id}"></td>
 			<td th:text="${hpi.processDefinitionId}"></td>
-			<td th:text="${hpi.name}"></td>
+			<td><a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图" th:text="${hpi.name }">activityName</a></td>
 			<td th:text="${hpi.startUserId}"></td>
 			<td th:text="${hpi.startTime != null ? #dates.format(hpi.startTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
 			<td th:text="${hpi.endTime != null ? #dates.format(hpi.endTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>

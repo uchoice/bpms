@@ -4,13 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.FlowElement;
+import org.activiti.bpmn.model.Process;
+import org.activiti.bpmn.model.StartEvent;
+import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author HenryYan
@@ -82,6 +90,26 @@ public class WorkflowUtils {
 
 		FileUtils.writeByteArrayToFile(file, b);
 		return diagramPath;
+	}
+	
+	/**
+	 * 从bpmnModel中取出所有需要的formKeys
+	 * @param model model
+	 * @return
+	 */
+	public static List<String> getFormKeys(BpmnModel model) {
+		List<Process> processes = model.getProcesses();
+		List<String> formkeys = Lists.newArrayList();
+		for (Process p : processes) {
+			for (FlowElement f : p.getFlowElements()) {
+				if (f instanceof StartEvent) {
+					formkeys.add(((StartEvent) f).getFormKey());
+				} else if (f instanceof UserTask) {
+					formkeys.add(((UserTask) f).getFormKey());
+				}
+			}
+		}
+		return formkeys;
 	}
 
 }
