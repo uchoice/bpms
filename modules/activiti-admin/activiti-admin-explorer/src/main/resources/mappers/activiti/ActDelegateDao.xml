@@ -4,17 +4,9 @@
     
 	<sql id="actDelegateColumns">
 		a.id AS "id",
-		a.owner AS "owner",
-		a.assign AS "assign",
-		a.process_id AS "processId",
-		a.process_name AS "processName",
-		a.start_date AS "startDate",
-		a.end_date AS "endDate",
-		a.create_date AS "createDate",
-		a.update_date AS "updateDate",
-		a.remarks AS "remarks",
-		a.canceled AS "canceled",
-		a.cancel_date AS "cancelDate"
+		a.task_id AS "taskId",
+		a.delegate AS "delegate",
+		a.delegated AS "delegated"
 	</sql>
 	
 	<sql id="actDelegateJoins">
@@ -28,42 +20,17 @@
 		WHERE a.id = #{id}
 	</select>
 	
-	<select id="findEffectiveList" resultType="ActDelegate">
-		SELECT 
-			<include refid="actDelegateColumns"/>
-		FROM act_delegate a
-		<include refid="actDelegateJoins"/>
-		where
-			a.canceled = '0'
-			AND a.assign = #{assign}
-			AND a.start_date &lt;= #{nowDate}
-			AND a.end_date &gt;= #{nowDate}
-	</select>
-	
 	<select id="findList" resultType="ActDelegate">
 		SELECT 
 			<include refid="actDelegateColumns"/>
 		FROM act_delegate a
 		<include refid="actDelegateJoins"/>
 		<where>
-			
-			<if test="owner != null and owner != ''">
-				AND a.owner = #{owner}
+			<if test="delegate != null and delegate != ''">
+				delegate = #{delegate}
 			</if>
-			<if test="assign != null and assign != ''">
-				AND a.assign = #{assign}
-			</if>
-			<if test="processId != null and processId != ''">
-				AND a.process_id = #{processId}
-			</if>
-			<if test="startDate != null">
-				AND a.end_date &gt;= #{startDate}
-			</if>
-			<if test="endDate != null">
-				AND a.start_date &lt;= #{endDate}
-			</if>
-			<if test="canceled != null and canceled != ''">
-				AND a.canceled = #{canceled}
+			<if test="delegated != null and delegated != ''">
+				delegated = #{delegated}
 			</if>
 		</where>
 		<choose>
@@ -73,6 +40,19 @@
 			<otherwise>
 			</otherwise>
 		</choose>
+	</select>
+	
+	<select id="findListByTaksIds" resultType="ActDelegate">
+		SELECT 
+			<include refid="actDelegateColumns"/>
+		FROM act_delegate a
+		<include refid="actDelegateJoins"/>
+		WHERE
+		delegate = #{delegate}
+		AND task_id in
+		<foreach collection="taskIds" open="(" close=")" separator="," item="taskId">
+			#{taskId}
+		</foreach>
 	</select>
 	
 	<select id="findAllList" resultType="ActDelegate">
@@ -92,43 +72,49 @@
 		</choose>
 	</select>
 	
+	<insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO act_delegate(
+			id,
+			task_id,
+			delegate,
+			delegated
+		) VALUES 
+		<foreach collection="list" separator="," item="delegate">
+			(
+				#{delegate.id},
+				#{delegate.taskId},
+				#{delegate.delegate},
+				#{delegate.delegated}
+			)
+		</foreach>
+	</insert>
+	
 	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
 		INSERT INTO act_delegate(
-			owner,
-			assign,
-			process_id,
-			process_name,
-			start_date,
-			end_date,
-			create_date,
-			update_date,
-			remarks
-		) VALUES (
-			#{owner},
-			#{assign},
-			#{processId},
-			#{processName},
-			#{startDate},
-			#{endDate},
-			#{createDate},
-			#{updateDate},
-			#{remarks}
+			id,
+			task_id,
+			delegate,
+			delegated
+		) VALUES 
+		(
+			#{id},
+			#{taskId},
+			#{delegate},
+			#{delegated}
 		)
 	</insert>
 	
 	<update id="update">
 		UPDATE act_delegate SET 	
-			start_date = #{startDate},
-			end_date = #{endDate},
-			update_date = #{updateDate}
+			task_id = #{taskId},
+			delegate = #{delegate},
+			delegated = #{delegated}
 		WHERE id = #{id}
 	</update>
 	
 	<update id="delete">
-		UPDATE act_delegate SET 
-		canceled = 1,
-		cancel_date = #{cancelDate}
-		WHERE id = #{id}
+		DELETE FROM act_delegate
+		WHERE task_id = #{taskId}
 	</update>
 	
 </mapper>

@@ -791,6 +791,7 @@ var ProcessDiagramGenerator = {
 					var u = rect.data("contextObject");
 					u.properties.assignee = userTasks[i].assignee;
 					u.properties.startTime = userTasks[i].startTime;
+					u.properties.claimTime = userTasks[i].claimTime;
 					u.properties.endTime = userTasks[i].endTime;
 					break;
 				}
@@ -1044,7 +1045,6 @@ var ProcessDiagramGenerator = {
 	showActivityInfo: function(activity){
 		var diagramInfo = $("#" + this.options.diagramInfoId);
 		if (!diagramInfo) return;
-		console.log(activity);
 		// update by xbyang 2017年7月3日12:36:21
 		var values = {
 			activityId: activity.getId(),
@@ -1055,6 +1055,7 @@ var ProcessDiagramGenerator = {
 			candidateGroupExp: activity.getProperty("candidateGroupExp"),
 			assignee: activity.getProperty("assignee"),
 			startTime: activity.getProperty("startTime"),
+			claimTime: activity.getProperty("claimTime"),
 			endTime: activity.getProperty("endTime")
 		};
 		var TPL_ACTIVITY_INFO = '' 
@@ -1070,6 +1071,7 @@ var ProcessDiagramGenerator = {
 				TPL_ACTIVITY_INFO = TPL_ACTIVITY_INFO
 				+ '<div><b>实际办理人</b>: {assignee}</div>'
 				+ '<div><b>开始时间</b>: {startTime}</div>'
+				+ '<div><b>签收时间</b>: {claimTime}</div>'
 				+ '<div><b>办结时间</b>: {endTime}</div>';
 			}
 		}

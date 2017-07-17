@@ -34,6 +34,7 @@
 				<th>创建时间</th>
 				<th>最后更新时间</th>
 				<th>元数据</th>
+				<th>全局表单</th>
 				<th>操作</th>
 			</tr>
 		</thead>
@@ -46,12 +47,12 @@
 				<td th:text="${model.createTime != null ? #dates.format(model.createTime ,'yyyy-MM-dd HH:mm:ss') : ''}">CREATE_TIME</td>
 				<td th:text="${model.lastUpdateTime != null ? #dates.format(model.lastUpdateTime ,'yyyy-MM-dd HH:mm:ss') : ''}">LAST_UPDATE_TIME</td>
 				<td th:title="${model.metaInfo }"><span class="ellipsis" style="max-width: 400px;" th:text="${model.metaInfo }"></span></td>
+				<td th:text="${model.tenantId }">tenantId</td>
 				<td>
 					<a th:href="@{'/modeler.html?modelId='+ ${model.id}}" target="_blank">编辑</a>
 					<a th:href="@{'/management/model/deploy/'+ ${model.id}}"  onclick="return confirmx('确认要部署该流程模型吗？', this.href)">部署</a>
 					导出(<a th:href="@{'/management/model/export/'+${model.id}+'/bpmn'}" target="_blank">BPMN</a>
-					|&nbsp;<a th:href="@{'/management/model/export/'+${model.id}+'/json'}" target="_blank">JSON</a>
-					|&nbsp;<a href="javascript:;" onclick='showSvgTip()'>SVG</a>)
+					|&nbsp;<a th:href="@{'/management/model/export/'+${model.id}+'/json'}" target="_blank">JSON</a>)
                        <a th:href="@{'/management/model/delete/'+${model.id}}" onclick="return confirmx('确认要删除该流程模型吗？', this.href)">删除</a>
 				</td>
 			</tr>
@@ -78,6 +79,12 @@
 								<td>KEY：</td>
 								<td>
 									<input id="key" name="key" type="text" />
+								</td>
+							</tr>
+							<tr>
+								<td>全局表单：</td>
+								<td>
+									<input id="tenant" name="tenant" type="text" />
 								</td>
 							</tr>
 							<tr>

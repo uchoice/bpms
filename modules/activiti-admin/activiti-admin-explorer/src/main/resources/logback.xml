@@ -60,11 +60,11 @@
     </appender>
 
     <!-- show activiti sql-->
-    <logger name="org.activiti.engine.impl.persistence.entity" level="INFO" />
+    <logger name="org.activiti.engine.impl.persistence.entity" level="DEBUG" />
     <!-- LEVEL CAN NOT BE DEBUG, OR WOULD BE ERROR -->
 	<logger name="org.apache.catalina" level="INFO"></logger>
 	
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="APP_INFO_APPENDER"/>
         <appender-ref ref="APP_ERROR_APPENDER"/>
         <if condition='isDefined("logback.env")'>

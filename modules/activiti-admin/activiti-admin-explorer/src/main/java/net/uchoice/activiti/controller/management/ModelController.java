@@ -1,28 +1,20 @@
 package net.uchoice.activiti.controller.management;
 
 import java.io.ByteArrayInputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import net.uchoice.activiti.entity.ActForm;
 import net.uchoice.activiti.service.ActFormService;
+import net.uchoice.activiti.service.WorkflowService;
 import net.uchoice.activiti.util.WorkflowUtils;
 
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
-import org.activiti.bpmn.model.FlowElement;
-import org.activiti.bpmn.model.StartEvent;
-import org.activiti.bpmn.model.UserTask;
-import org.activiti.editor.constants.ModelDataJsonConstants;
 import org.activiti.editor.language.json.converter.BpmnJsonConverter;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.Deployment;
@@ -32,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.activiti.bpmn.model.Process;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -42,6 +33,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * 流程模型控制器
@@ -56,9 +51,12 @@ public class ModelController {
 
 	@Autowired
 	RepositoryService repositoryService;
-	
+
 	@Autowired
 	ActFormService actFormService;
+
+	@Autowired
+	WorkflowService workflowService;
 
 	/**
 	 * 模型列表
@@ -75,39 +73,26 @@ public class ModelController {
 	 * 创建模型
 	 */
 	@RequestMapping(value = "create", method = RequestMethod.POST)
-	public void create(@RequestParam("name") String name,
+	public void create(
+			@RequestParam("name") String name,
+			@RequestParam("tenant") String tenant,
 			@RequestParam("key") String key,
-			@RequestParam("description") String description,
+			@RequestParam(value = "description", required = false) String description,
 			HttpServletRequest request, HttpServletResponse response) {
 		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			ObjectNode editorNode = objectMapper.createObjectNode();
-			editorNode.put("id", "canvas");
-			editorNode.put("resourceId", "canvas");
-			ObjectNode stencilSetNode = objectMapper.createObjectNode();
-			stencilSetNode.put("namespace",
-					"http://b3mn.org/stencilset/bpmn2.0#");
-			editorNode.replace("stencilset", stencilSetNode);
-			Model modelData = repositoryService.newModel();
-
-			ObjectNode modelObjectNode = objectMapper.createObjectNode();
-			modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME, name);
-			modelObjectNode.put(ModelDataJsonConstants.MODEL_REVISION, 1);
-			description = StringUtils.defaultString(description);
-			modelObjectNode.put(ModelDataJsonConstants.MODEL_DESCRIPTION,
+			String modelId = workflowService.createModel(name, tenant, key,
 					description);
-			modelData.setMetaInfo(modelObjectNode.toString());
-			modelData.setName(name);
-			modelData.setKey(StringUtils.defaultString(key));
-
-			repositoryService.saveModel(modelData);
-			repositoryService.addModelEditorSource(modelData.getId(),
-					editorNode.toString().getBytes("utf-8"));
-
 			response.sendRedirect(request.getContextPath()
-					+ "/modeler.html?modelId=" + modelData.getId());
+					+ "/modeler.html?modelId=" + modelId);
 		} catch (Exception e) {
-			logger.error("创建模型失败：", e);
+			logger.error("create model failed!", e);
+			try (OutputStream os = response.getOutputStream()) {
+				os.write(("create model failed ! cause by :" + e.getMessage())
+						.getBytes("UTF-8"));
+				os.flush();
+			} catch (Exception e1) {
+				logger.error("write to client failed!", e);
+			}
 		}
 	}
 
@@ -119,44 +104,42 @@ public class ModelController {
 			RedirectAttributes redirectAttributes) {
 		try {
 			Model modelData = repositoryService.getModel(modelId);
-			ObjectNode modelNode = (ObjectNode) new ObjectMapper()
-					.readTree(repositoryService.getModelEditorSource(modelData
-							.getId()));
-			byte[] bpmnBytes = null;
-
-			BpmnModel model = new BpmnJsonConverter()
-					.convertToBpmnModel(modelNode);
-			bpmnBytes = new BpmnXMLConverter().convertToXML(model);
-			List<String> formKeys = WorkflowUtils.getFormKeys(model);
-			List<ActForm> forms = actFormService.findFormsByName(formKeys);
-			if(forms.size() != formKeys.size()){
-				Set<String> existsForms = Sets.newHashSet();
-				StringBuilder notExists  = new StringBuilder();
-				for(ActForm actForm:forms){
-					existsForms.add(actForm.getName());
-				}
-				for(String fkey:formKeys){
-					if(!existsForms.contains(fkey)){
-						notExists.append(fkey).append(",");
-					}
-				}
-				redirectAttributes.addFlashAttribute("message", "部署失败，流程中需要的表单"
-						+ notExists.substring(0, notExists.length()-1) + "不存在");
+			if(StringUtils.isEmpty(modelData.getTenantId())){
+				redirectAttributes.addFlashAttribute("message", 
+						"部署失败，该模型未输入流程全局表单，请输入流程全局表单后再试!");
 			} else {
-				String processName = modelData.getName() + ".bpmn20.xml";
-				DeploymentBuilder deploymentBuilder = repositoryService.createDeployment()
-						.name(modelData.getName())
-						.addString(processName, new String(bpmnBytes));
-				for(ActForm f:forms){
-					deploymentBuilder.addString(f.getName(), f.getContent());
+				ObjectNode modelNode = (ObjectNode) new ObjectMapper()
+					.readTree(repositoryService.getModelEditorSource(modelData
+						.getId()));
+				BpmnModel model = new BpmnJsonConverter()
+				.convertToBpmnModel(modelNode);
+				byte[] bpmnBytes = new BpmnXMLConverter().convertToXML(model);
+				List<String> formKeys = WorkflowUtils.getFormKeys(model);
+				formKeys.add(modelData.getTenantId());
+				
+				List<ActForm> forms = actFormService.findFormsByName(formKeys);
+				Set<String> notExistForms = WorkflowUtils.getNotExistForms(forms, formKeys);
+				if (!notExistForms.isEmpty()) {
+					redirectAttributes.addFlashAttribute("message", "部署" + modelId + "失败，流程中需要的表单"
+							+ notExistForms + "不存在");
+				} else {
+					String processName = modelData.getName() + ".bpmn20.xml";
+					DeploymentBuilder deploymentBuilder = repositoryService
+							.createDeployment().name(modelData.getName())
+							.addString(processName, new String(bpmnBytes));
+					for (ActForm f : forms) {
+						deploymentBuilder.addString(f.getName(), f.getContent());
+					}
+					deploymentBuilder.tenantId(modelData.getTenantId());
+					Deployment deployment = deploymentBuilder.deploy();
+					redirectAttributes.addFlashAttribute("message", "部署成功，部署ID="
+							+ deployment.getId());
 				}
-				Deployment deployment = deploymentBuilder.deploy();
-				redirectAttributes.addFlashAttribute("message", "部署成功，部署ID="
-						+ deployment.getId());
 			}
 		} catch (Exception e) {
-			logger.error("根据模型部署流程失败：modelId={}", modelId, e);
-			redirectAttributes.addFlashAttribute("message", "模型部署失败，" + e.getMessage());
+			logger.error("deploy by modelId failed，modelId={}", modelId, e);
+			redirectAttributes.addFlashAttribute("message",
+					"模型部署失败，" + e.getMessage());
 		}
 		return "redirect:/management/model/list";
 	}

@@ -60,6 +60,7 @@ public class ModelEditorJsonRestResource implements ModelDataJsonConstants {
         ObjectNode editorJsonNode = (ObjectNode) objectMapper.readTree(
             new String(repositoryService.getModelEditorSource(model.getId()), "utf-8"));
         modelNode.put("model", editorJsonNode);
+        modelNode.put("tenant", model.getTenantId());
         
       } catch (Exception e) {
         LOGGER.error("Error creating model JSON", e);

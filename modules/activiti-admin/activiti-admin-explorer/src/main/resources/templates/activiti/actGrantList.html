@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link th:replace="/common/fragment::head">
+	<title>流程授权信息管理</title>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			// 点击按钮设置用户的组
+            $('.update-date').click(function() {
+            	var tr = $(this).closest("tr");
+            	var td = tr.find("td");
+            	$("#actGrantId").val($(this).data("id"));
+            	$("#actGrantOwner").text($(td[1]).text());
+            	$("#actGrantGrant").text($(td[2]).text());
+            	$("#actGrantProcessName").text($(td[4]).text());
+            	$("#actGrantStartDate").val($(td[5]).text());
+            	$("#actGrantEndDate").val($(td[6]).text());
+            	$("#actGrantRemarks").text($(td[9]).text());
+                $('#updateDateModal').modal();
+            });
+            $("#updateDateSubmit").click(function() {
+            	if($(this).is(":visible")){
+	            	$("#updateDateModal form").submit();
+            	}
+            });
+		});
+		function page(n,s){
+			$("#pageNo").val(n);
+			$("#pageSize").val(s);
+			$("#searchForm").submit();
+        	return false;
+        }
+	</script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+		<li class="active"><a th:href="@{/activiti/actGrant/}">流程授权信息列表</a></li>
+		<li><a th:href="@{/activiti/actGrant/form}">流程授权信息添加</a></li>
+	</ul>
+	<form id="searchForm" th:action="@{/activiti/actGrant/}" method="post" class="breadcrumb form-search">
+		<input id="pageNo" name="pageNo" type="hidden" th:value="${page.pageNo}"/>
+		<input id="pageSize" name="pageSize" type="hidden" th:value="${page.pageSize}"/>
+		<ul class="ul-form">
+			<li><label>所有人：</label>
+				<input type="text" name="grant" maxlength="64" class="input-medium" th:text="${actGrant.grant}"/>
+			</li>
+			<li><label>流程：</label>
+				<select name="processId" class="input-medium">
+					<option value="">所有流程</option>
+					<option th:each="pro:${processes}" th:value="${pro.id}" th:text="${pro.name}" th:selected="${pro.id == actGrant.processId}"></option>
+				</select>
+			</li>
+			<li><label>授予有效期：</label>
+				<input name="startDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate"
+					th:value="${actGrant.startDate != null ? #dates.format(actGrant.startDate,'yyyy-MM-dd') : ''}"
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false});"/>
+				<input name="endDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate"
+					th:value="${actGrant.endDate != null ? #dates.format(actGrant.endDate,'yyyy-MM-dd') : ''}"
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false});"/>
+			</li>
+			<li><label>收回授权：</label>
+				<select name="revoke" class="input-medium">
+					<option value="" th:selected="${actGrant.revoke==''}">全部</option>
+					<option value="1" th:selected="${actGrant.revoke=='1'}">已收回</option>
+					<option value="0" th:selected="${actGrant.revoke=='0'}">未收回</option>
+				</select>
+			</li>
+			<li class="btns"><input id="btnSubmit" class="btn btn-primary" type="submit" value="查询"/></li>
+			<li class="clearfix"></li>
+		</ul>
+	</form>
+	<div th:replace="/common/fragment::message">信息</div>
+	<table id="contentTable" class="table table-striped table-bordered table-condensed">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>所有人</th>
+				<th>被授予人</th>
+				<th>流程部署ID</th>
+				<th>流程名称</th>
+				<th>开始日期</th>
+				<th>截止日期</th>
+				<th>创建日期</th>
+				<th>修改日期</th>
+				<th>备注</th>
+				<th>是否收回</th>
+				<th>收回日期</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="actGrant:${page.result}">
+				<td th:text="${actGrant.id}">
+				</td>
+				<td th:text="${actGrant.owner}">
+				</td>
+				<td th:text="${actGrant.grant}">
+				</td>
+				<td th:text="${actGrant.processId}">
+				</td>
+				<td th:text="${actGrant.processName}">
+				</td>
+				<td th:text="${#dates.format(actGrant.startDate,'yyyy-MM-dd')}">
+				</td>
+				<td th:text="${#dates.format(actGrant.endDate,'yyyy-MM-dd')}">
+				</td>
+				<td th:text="${actGrant.createDate != null ? #dates.format(actGrant.createDate,'yyyy-MM-dd HH:mm:ss') : ''}">
+				</td>
+				<td th:text="${actGrant.updateDate != null ? #dates.format(actGrant.updateDate,'yyyy-MM-dd HH:mm:ss') : ''}">
+				</td>
+				<td th:text="${actGrant.remarks}">
+				</td>
+				<td th:text="${actGrant.revoke == '1' ? '已收回' : '未收回'}">
+				</td>
+				<td th:text="${actGrant.revokeDate != null ? #dates.format(actGrant.revokeDate,'yyyy-MM-dd HH:mm:ss') : ''}">
+				</td>
+				<td th:with="eff=${(actGrant.revoke == '0') && (actGrant.endDate.compareTo(#dates.createNow()) > 0)}">
+    				<a th:if="${eff}" href="#" data-toggle="modal" th:data-id="${actGrant.id}" class="update-date">修改</a>
+					<a th:if="${eff}" th:href="@{${'/activiti/actGrant/delete?id='+actGrant.id}}" onclick="return confirmx('确认要收回该流程代办授权吗？', this.href)">收回</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="pagination" th:utext="${page}"></div>
+	
+	<div id="updateDateModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="updateDateModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			    <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			        <h3 id="updateDateModalLabel">修改授权有效期</h3>
+			    </div>
+			    <div class="modal-body" style="position: relative;">
+			        <form th:action="@{/activiti/actGrant/save}" method="POST" class="form-horizontal">
+			             <input type="hidden" name="id" id="actGrantId"/>
+				         <div class="control-group">
+							<label class="control-label">流程所有人：</label>
+							<div class="controls">
+								<span id="actGrantOwner"></span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">被授予人：</label>
+							<div class="controls">
+								<span id="actGrantGrant"></span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">流程名称：</label>
+							<div class="controls">
+								<span id="actGrantProcessName"></span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">开始日期：</label>
+							<div class="controls">
+								<input name="startDate" id="actGrantStartDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
+									onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false});"/>
+								<span class="help-inline"><font color="red">*</font> </span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">截止日期：</label>
+							<div class="controls">
+								<input name="endDate" id="actGrantEndDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
+									onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false,minDate:'#F{$dp.$D(\'actGrantStartDate\')||\'%y-%M-%d\'}'});"/>
+								<span class="help-inline"><font color="red">*</font> </span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">备注：</label>
+							<div class="controls">
+								<div id="actGrantRemarks"></div>
+							</div>
+						</div>
+			        </form>
+			    </div>
+			    <div class="modal-footer">
+			        <button id="updateDateSubmit" class="btn btn-primary">确定</button>
+			        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+			    </div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

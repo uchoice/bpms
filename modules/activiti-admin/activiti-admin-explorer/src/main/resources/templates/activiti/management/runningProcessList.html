@@ -5,7 +5,7 @@
 	<link th:replace="/common/fragment::head">
 	<title>管理运行中流程</title>
 	<script type="text/javascript" th:src="@{/static/activiti/workflow.js}"></script>
-	<script type="text/javascript" th:src="@{/static/activiti/process-list.js}"></script>
+	<script type="text/javascript" th:src="@{/static/activiti/get-form.js}"></script>
 	<script type="text/javascript">
 		$(function() {
 			// 跟踪
@@ -27,8 +27,8 @@
 			<th>操作</th>
 		</tr>
 		<tr th:each="p:${page.result }">
-			<td th:text="${p.id }">流程id</td>
-			<td th:text="${p.processInstanceId }">流程实例ID</td>
+			<td th:text="${p.id }">流程执行id</td>
+			<td><a href="#" class="tenant" th:pid="${p.processInstanceId}" th:pname="${p.name }" th:text="${p.processInstanceId}">流程实例ID</a></td>
 			<td th:text="${p.processDefinitionId }">流程定义ID</td>
 			<td th:text="${p.name }">流程名称</td>
 			<td><a class="trace" href='#' th:pid="${p.id}" th:pdid="${p.processDefinitionId}" title="点击查看流程图" th:text="${#pdCaches.getActivityName(p.processDefinitionId, p.activityId)}">activityName</a></td>

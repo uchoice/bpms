@@ -5,6 +5,7 @@
 	<link th:replace="/common/fragment::head">
 	<title>已结束列表</title>
     <script th:src="@{/static/activiti/workflow.js}" type="text/javascript"></script>
+    <script th:src="@{/static/activiti/get-form.js}" type="text/javascript"></script>
 	<script type="text/javascript">
 		$(function() {
 			// 跟踪
@@ -26,7 +27,7 @@
 		</tr>
 
 		<tr th:each="hpi:${page.result}">
-			<td th:text="${hpi.id}"></td>
+			<td><a href="#" class="tenant" th:pid="${hpi.id}" th:pname="${hpi.name }" th:text="${hpi.id}"></a></td>
 			<td th:text="${hpi.processDefinitionId}"></td>
 			<td><a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图" th:text="${hpi.name }">activityName</a></td>
 			<td th:text="${hpi.startUserId}"></td>

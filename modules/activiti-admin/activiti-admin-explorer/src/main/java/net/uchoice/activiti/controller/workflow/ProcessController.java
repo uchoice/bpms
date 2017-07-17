@@ -9,12 +9,14 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.uchoice.activiti.cmd.GetRenderedTenantFormCmd;
 import net.uchoice.common.entity.JsonResult;
 import net.uchoice.common.persistence.Page;
 
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
+import org.activiti.engine.ManagementService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.history.HistoricProcessInstance;
@@ -55,6 +57,9 @@ public class ProcessController {
 
 	@Autowired
 	private RuntimeService runtimeService;
+	
+	@Autowired
+	private ManagementService managementService;
 
 	/**
 	 * 动态form流程列表
@@ -81,12 +86,22 @@ public class ProcessController {
 	}
 
 	/**
+	 * 读取流程全局表单，读取流程的全局表单内容来渲染tenantForm
+	 */
+	@RequestMapping(value = "/{processDefinitionId}/tenant-form")
+	public String findTenantForm(
+			@PathVariable("processDefinitionId") String processDefinitionId,Model model) throws Exception {
+		// 根据流程定义ID读取外置表单
+		model.addAttribute("form", managementService.executeCommand(new GetRenderedTenantFormCmd(processDefinitionId)));
+		return "/activiti/workflow/tenantForm";
+	}
+	
+	/**
 	 * 初始化启动流程，读取启动流程的表单内容来渲染start form
 	 */
 	@RequestMapping(value = "/{processDefinitionId}/start-form")
 	public String findStartForm(
-			@PathVariable("processDefinitionId") String processDefinitionId,
-			String pName, Model model) throws Exception {
+			@PathVariable("processDefinitionId") String processDefinitionId, Model model) throws Exception {
 		// 根据流程定义ID读取外置表单
 		Object startForm = formService
 				.getRenderedStartForm(processDefinitionId);
@@ -104,16 +119,16 @@ public class ProcessController {
 			@PathVariable("processDefinitionId") String processDefinitionId,
 			HttpServletRequest request) {
 		Map<String, String> formProperties = new HashMap<String, String>();
-
 		// 从request中读取参数然后转换
 		Map<String, String[]> parameterMap = request.getParameterMap();
 		Set<Entry<String, String[]>> entrySet = parameterMap.entrySet();
 		for (Entry<String, String[]> entry : entrySet) {
 			String key = entry.getKey();
-
 			// fp_的意思是form paremeter
 			if (StringUtils.defaultString(key).startsWith("fp_")) {
 				formProperties.put(key.split("_")[1], entry.getValue()[0]);
+			} else {
+				formProperties.put(key, entry.getValue()[0]);
 			}
 		}
 
@@ -162,26 +177,5 @@ public class ProcessController {
 		return mav;
 	}
 
-	/**
-	 * 已结束的流程实例
-	 *
-	 * @param model
-	 * @return
-	 */
-	/*
-	 * @RequestMapping(value = "/finished/list") public ModelAndView
-	 * finished(Model model, HttpServletRequest request, HttpServletResponse
-	 * response) { ModelAndView mav = new
-	 * ModelAndView("/activiti/workflow/finishedProcessList");
-	 * Page<HistoricProcessInstance> page = new Page<HistoricProcessInstance>(
-	 * request, response); User user = (User)
-	 * AuthUtils.getAuthenticationObject().getPrincipal();
-	 * HistoricProcessInstanceQuery query = historyService
-	 * .createHistoricProcessInstanceQuery() .involvedUser(user.getId())
-	 * .orderByProcessInstanceEndTime().desc(); page.setCount(query.count());
-	 * List<HistoricProcessInstance> list = query.listPage(
-	 * page.getFirstResult(), page.getMaxResults()); page.setResult(list);
-	 * mav.addObject("page", page); return mav; }
-	 */
 
 }

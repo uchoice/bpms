@@ -16,19 +16,24 @@ package org.activiti.rest.diagram.services;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.HistoryService;
+import org.activiti.engine.ManagementService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.NativeHistoricTaskInstanceQuery;
 import org.activiti.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.activiti.engine.impl.pvm.PvmTransition;
 import org.activiti.engine.impl.pvm.process.ActivityImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -46,14 +52,17 @@ public class ProcessInstanceHighlightsResource {
 	
 	private static Logger log = LoggerFactory.getLogger(ProcessInstanceHighlightsResource.class);
 
-  @Autowired
+	@Autowired
 	private RuntimeService runtimeService;
   
-  @Autowired
+	@Autowired
 	private RepositoryService repositoryService;
   
-  @Autowired
+	@Autowired
 	private HistoryService historyService;
+	
+	@Autowired
+	private ManagementService managementService;
   
 	protected ObjectMapper objectMapper = new ObjectMapper();
 
@@ -66,7 +75,7 @@ public class ProcessInstanceHighlightsResource {
 		
 		ArrayNode activitiesArray = objectMapper.createArrayNode();
 		ArrayNode flowsArray = objectMapper.createArrayNode();
-		ArrayNode userTaks = objectMapper.createArrayNode();
+		ArrayNode userTasks = objectMapper.createArrayNode();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		// update by xbyang 2017年7月2日17:18:04
 		try {
@@ -75,16 +84,30 @@ public class ProcessInstanceHighlightsResource {
 			List<HistoricActivityInstance> historicHighLightedActivities = historyService.createHistoricActivityInstanceQuery()
 					.processInstanceId(processInstanceId).list();
 			ObjectNode userTask = null;
+			List<String> userTaskIds = new ArrayList<String>();
 			for( HistoricActivityInstance activityInstance : historicHighLightedActivities){
 				if("userTask".equals(activityInstance.getActivityType())){
 					userTask = objectMapper.createObjectNode();
+					userTaskIds.add(activityInstance.getTaskId());
 					userTask.put("activityId", activityInstance.getActivityId());
-					userTask.put("assignee", activityInstance.getAssignee() == null ? "未签收" : activityInstance.getAssignee());
-					userTask.put("startTime", activityInstance.getStartTime() == null ? "" : df.format(activityInstance.getStartTime()));
-					userTask.put("endTime", activityInstance.getEndTime() == null ? "" : df.format(activityInstance.getEndTime()));
-					userTaks.add(userTask);
+					userTask.put("taskId", activityInstance.getTaskId());
+					userTasks.add(userTask);
 				}
 				activitiesArray.add(activityInstance.getActivityId());
+			}
+			List<HistoricTaskInstance> historicTasks = getHistoricTasks(userTaskIds);
+			for(JsonNode node : userTasks){
+				userTask = (ObjectNode) node;
+				for(HistoricTaskInstance hisTask : historicTasks){
+					if(userTask.get("taskId").asText().equals(hisTask.getId())){
+						userTask.put("assignee", StringUtils.isEmpty(hisTask.getAssignee()) ? "未签收" : hisTask.getAssignee() +
+							(StringUtils.isEmpty(hisTask.getOwner()) ? "" : " ( 代: " + hisTask.getOwner()+" )"));
+						userTask.put("startTime", hisTask.getStartTime() == null ? "" : df.format(hisTask.getStartTime()));
+						userTask.put("endTime", hisTask.getEndTime() == null ? "" : df.format(hisTask.getEndTime()));
+						userTask.put("claimTime", hisTask.getClaimTime() == null ? "" : df.format(hisTask.getClaimTime()));
+						break;
+					}
+				}
 			}
 			ProcessDefinitionEntity processDefinition = (ProcessDefinitionEntity) repositoryService.getProcessDefinition(processDefinitionId);
 			
@@ -99,13 +122,33 @@ public class ProcessInstanceHighlightsResource {
 			log.error("highlights exception", e);
 		}
 		
-		responseJSON.put("userTaks", userTaks);
+		responseJSON.put("userTaks", userTasks);
 		responseJSON.put("activities", activitiesArray);
 		responseJSON.put("flows", flowsArray);
 		
 		return responseJSON;
 	}
-	
+	/**
+	 * 根据taskId去取得历史任务实例
+	 * add by xbyang 2017年7月16日13:01:32
+	 * @param userTaskIds
+	 * @return
+	 */
+	private List<HistoricTaskInstance> getHistoricTasks(List<String> userTaskIds){
+		if(userTaskIds.isEmpty()){
+			return Collections.emptyList();
+		}
+		NativeHistoricTaskInstanceQuery query = historyService.createNativeHistoricTaskInstanceQuery();
+		StringBuilder sql = new StringBuilder("SELECT RES.* from ").append(managementService.getTableName(HistoricTaskInstance.class)).append(" RES WHERE RES.ID_ in (");
+		String paramName = null;
+		for (int i = 0; i< userTaskIds.size() ; i++) {
+			paramName = "t" + i;
+			query.parameter(paramName, userTaskIds.get(i));
+			sql.append("#{").append(paramName).append("},");
+		}
+		sql.replace(sql.length() - 1, sql.length(), "").append(")");
+		return query.sql(sql.toString()).list();
+	}
 	
 	/**
 	 * getHighLightedFlows

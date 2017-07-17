@@ -4,13 +4,56 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link th:replace="/common/fragment::head">
 	<title>流程列表</title>
+	<style type="text/css">
+		div.control-group .control-label{
+			text-align: left;
+		}
+		div.control-group .span6 .control-label{
+			width: 95px; 
+		}
+		div.control-group .span7 .control-label{
+			width: 65px; 
+		}
+		div.control-group .span6 .controls{
+			margin-left: 115px; 
+		}
+		div.control-group .span7 .controls{
+			margin-left: 85px; 
+		}
+		span.span6,span.span7,span.span2{
+			margin-left: 0px;
+		}
+	</style>
 
     <script type="text/javascript">
-    $(function() {
-    	$('#deploy').click(function() {
-    		$('#deployFieldset').toggle('normal');
+	    $(function() {
+	    	$('#deploy').click(function() {
+	    		$('#deployFieldset').slideToggle('normal');
+	    	});
+	    	$('#uploadFile').change(function() { 
+	    		var val = $(this).val();
+	    		var varray = val.split("\\");
+				$('#uploadCover').val(varray[varray.length-1]); 
+			}); 
+	    	$("#uploadForm").validate({
+				submitHandler: function(form){
+					loading('正在提交，请稍等...');
+					form.submit();
+				},
+				errorContainer: "#messageBox",
+				errorPlacement: function(error, element) {
+					$("#messageBox").text("输入有误，请先更正。");
+					if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+						error.appendTo(element.parent().parent());
+					} else {
+						error.insertAfter(element);
+					}
+				}
+			});
     	});
-    });
+    	function chooseFile(){
+    	 	$('#uploadFile').click();
+    	}
     </script>
 </head>
 <body>
@@ -18,14 +61,34 @@
 	<div style="text-align: right;padding: 2px 1em 2px">
 		<div id="message" class="info" style="display:inline;"><b>提示：</b>点击xml或者png链接可以查看具体内容！</div>
 		<a id="deploy" href="#" class="btn btn-info">部署流程</a>
-		<a id="redeploy" class="btn btn-info" th:href="@{/management/process/redeploy/all}" style="display:none">重新部署流程</a>
 	</div>
-	<fieldset id="deployFieldset" style="display: none">
+	<fieldset id="deployFieldset" class="form-horizontal hide" style="padding: 5px 20px 0px;">
 		<legend>部署新流程</legend>
 		<div><b>支持文件格式：</b>zip、bar、bpmn、bpmn20.xml</div>
-		<form th:action="@{/management/process/deploy}" method="post" enctype="multipart/form-data">
-			<input type="file" name="file"/>
-			<input type="submit" value="Submit" class="btn btn-primary"/>
+		<form th:action="@{/management/process/deploy}" id="uploadForm" method="post" enctype="multipart/form-data" style="margin-top: 10px;">
+			<div class="control-group">
+				<span class="span6">
+					<label class="control-label">流程全局表单：</label>
+					<div class="controls">
+						<input type="text" name="tenant" maxlength="64" class="input-large required"/>
+						<span class="help-inline"><font color="red">*</font> </span>
+					</div>
+				</span>
+				<span class="span7">
+					<label class="control-label">流程文件：</label>
+					<div class="controls">
+						<div class="input-append"> 
+							<input id="uploadCover" class="input-large" type="text" onclick="chooseFile()" disabled="disabled"> 
+							<a class="btn" onclick="chooseFile()"><span class="icon-folder-open"></span> 选择文件</a> 
+						</div> 
+						<input id="uploadFile" type="file" name="file" class="required" accept=".zip,.bar,.bpmn,.bpmn20.xml" style="width: 0;"/>
+						<span class="help-inline"><font color="red">*</font> </span>
+					</div>
+				</span>
+				<span class="span2">
+					<input id="btnSubmit" class="btn btn-primary" type="submit" value="提交"/>
+				</span>
+			</div>
 		</form>
 	</fieldset>
 	<table width="100%" class="table table-bordered table-hover table-condensed">
@@ -38,6 +101,7 @@
 				<th>版本号</th>
 				<th>XML</th>
 				<th>图片</th>
+				<th>全局表单</th>
 				<th>部署时间</th>
 				<th>是否挂起</th>
 				<th>操作</th>
@@ -52,6 +116,7 @@
 				<td th:text="${process.version }">PROCESS_VERSION</td>
 				<td><a class="ellipsis" style="max-width: 400px;" target="_blank" th:href="@{${'/management/resource/process-definition/'+process.id+'/xml'}}" th:text="${process.resourceName }" th:title="${process.resourceName }">PROCESS_RESOURCENAME</a></td>
 				<td><a class="ellipsis" style="max-width: 300px;" target="_blank" th:href="@{${'/management/resource/process-definition/'+process.id+'/image'}}" th:text="${process.diagramResourceName }" th:title="${process.diagramResourceName }">PROCESS_DIAGRAM_RESOURCENAME</a></td>
+				<td th:text="${process.tenantId}"></td>
 				<td th:text="${deployment.deploymentTime != null ? #dates.format(deployment.deploymentTime,'yyyy-MM-dd HH:mm:ss') : ''}">DEPLOYMENT_TIME</td>
 				<td th:inline="text"> [[${process.suspended}]] |
 					<a th:if="${process.suspended }" th:href="@{${'/management/process/update/definition/'+process.id+'/active'}}">激活</a>

@@ -301,9 +301,12 @@ var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
     if (modelMetaData.description) {
     	description = modelMetaData.description;
     }
-    
+    var tenant = '';
+    if (modelMetaData.tenant) {
+    	tenant = modelMetaData.tenant;
+    }
     var saveDialog = { 'name' : modelMetaData.name,
-            'description' : description};
+            'description' : description, 'tenant': tenant};
     
     $scope.saveDialog = saveDialog;
     
@@ -334,7 +337,9 @@ var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
         if (!$scope.saveDialog.name || $scope.saveDialog.name.length == 0) {
             return;
         }
-
+        if (!$scope.saveDialog.tenant || $scope.saveDialog.tenant.length == 0) {
+        	return;
+        }
         // Indicator spinner image
         $scope.status = {
         	loading: true
@@ -342,6 +347,7 @@ var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
         
         modelMetaData.name = $scope.saveDialog.name;
         modelMetaData.description = $scope.saveDialog.description;
+        modelMetaData.tenant = $scope.saveDialog.tenant;
 
         var json = $scope.editor.getJSON();
         json = JSON.stringify(json);
@@ -372,6 +378,7 @@ var SaveModelCtrl = [ '$rootScope', '$scope', '$http', '$route', '$location',
             json_xml: json,
             svg_xml: svgDOM,
             name: $scope.saveDialog.name,
+            tenant: $scope.saveDialog.tenant,
             description: $scope.saveDialog.description
         };
 

@@ -6,6 +6,7 @@
 	<title>已结束列表</title>
 	<script th:src="@{/static/activiti/workflow.js}" type="text/javascript"></script>
 	<script th:src="@{/static/common/sort.js}" type="text/javascript"></script>
+	<script type="text/javascript" th:src="@{/static/activiti/get-form.js}"></script>
 	<script type="text/javascript">
 		$(function() {
 			// 跟踪
@@ -57,7 +58,7 @@
 		</thead>
 		<tbody>
 			<tr th:each="hpi:${page.result }">
-				<td th:text="${hpi.id }">流程ID</td>
+				<td><a href="#" class="tenant" th:pid="${hpi.id}" th:pname="${hpi.name }" th:text="${hpi.id}">流程ID</a></td>
 				<td th:text="${hpi.processDefinitionId }">流程定义ID</td>
 				<td th:text="${hpi.deploymentId }">流程部署ID</td>
 				<td><a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图" th:text="${hpi.name }">activityName</a></td>

@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import net.uchoice.activiti.entity.ActForm;
 
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author HenryYan
@@ -110,6 +114,25 @@ public class WorkflowUtils {
 			}
 		}
 		return formkeys;
+	}
+	/**
+	 * 取得所有不存在的form名字
+	 * @param forms 存在的form
+	 * @param formKeys 需要的formKey
+	 * @return
+	 */
+	public static Set<String> getNotExistForms(List<ActForm> forms,List<String> formKeys){
+		Set<String> existsForms = Sets.newHashSet();
+		Set<String> notExistForms = Sets.newHashSet();
+		for (ActForm actForm : forms) {
+			existsForms.add(actForm.getName());
+		}
+		for (String fkey : formKeys) {
+			if (!existsForms.contains(fkey)) {
+				notExistForms.add(fkey);
+			}
+		}
+		return notExistForms;
 	}
 
 }

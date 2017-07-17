@@ -65,7 +65,7 @@ public class ModelSaveRestResource implements ModelDataJsonConstants {
       modelJson.put(MODEL_DESCRIPTION, values.getFirst("description"));
       model.setMetaInfo(modelJson.toString());
       model.setName(values.getFirst("name"));
-      
+      model.setTenantId(values.getFirst("tenant"));
       repositoryService.saveModel(model);
       
       repositoryService.addModelEditorSource(model.getId(), values.getFirst("json_xml").getBytes("utf-8"));

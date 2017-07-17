@@ -3,35 +3,24 @@
  */
 package net.uchoice.activiti.entity;
 
-import java.util.Date;
-
-import javax.validation.constraints.NotNull;
-
 import net.uchoice.common.persistence.DataEntity;
 
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
- * 流程代办信息Entity
+ * 流程代理Entity
  * @author xbyang
- * @version 2017-06-27
+ * @version 2017-07-14
  */
 @Alias("ActDelegate")
 public class ActDelegate extends DataEntity<ActDelegate> {
 	
 	private static final long serialVersionUID = 1L;
-	private String owner;		// owner
-	private String assign;		// assign
-	private String processId;		// process_id
-	private String processName;		// process_name
-	private Date startDate;		// start_date
-	private Date endDate;		// end_date
-	private String canceled;		// canceled
-	private Date cancelDate;		// cancel_date
-	private Date nowDate;
+	private String taskId;		// 服务ID
+	private String delegate;		// 代理人
+	private String delegated;		// 被代理人
 	
 	public ActDelegate() {
 		super();
@@ -41,88 +30,31 @@ public class ActDelegate extends DataEntity<ActDelegate> {
 		super(id);
 	}
 
-	@Length(min=1, max=64, message="owner长度必须介于 1 和 64 之间")
-	public String getOwner() {
-		return owner;
+	@Length(min=1, max=64, message="服务ID长度必须介于 1 和 64 之间")
+	public String getTaskId() {
+		return taskId;
 	}
 
-	public void setOwner(String owner) {
-		this.owner = owner;
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
 	}
 	
-	@Length(min=1, max=64, message="assign长度必须介于 1 和 64 之间")
-	public String getAssign() {
-		return assign;
+	@Length(min=1, max=64, message="代理人长度必须介于 1 和 64 之间")
+	public String getDelegate() {
+		return delegate;
 	}
 
-	public void setAssign(String assign) {
-		this.assign = assign;
+	public void setDelegate(String delegate) {
+		this.delegate = delegate;
 	}
 	
-	@Length(min=1, max=64, message="process_id长度必须介于 1 和 64 之间")
-	public String getProcessId() {
-		return processId;
+	@Length(min=1, max=64, message="被代理人长度必须介于 1 和 64 之间")
+	public String getDelegated() {
+		return delegated;
 	}
 
-	public void setProcessId(String processId) {
-		this.processId = processId;
+	public void setDelegated(String delegated) {
+		this.delegated = delegated;
 	}
-	
-	@Length(min=0, max=255, message="process_name长度必须介于 0 和 255 之间")
-	public String getProcessName() {
-		return processName;
-	}
-
-	public void setProcessName(String processName) {
-		this.processName = processName;
-	}
-	
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	@NotNull(message="start_date不能为空")
-	public Date getStartDate() {
-		return startDate;
-	}
-
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
-	}
-	
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	@NotNull(message="end_date不能为空")
-	public Date getEndDate() {
-		return endDate;
-	}
-
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
-	}
-	
-	@Length(min=0, max=1, message="canceled长度必须介于 0 和 1 之间")
-	public String getCanceled() {
-		return canceled;
-	}
-
-	public void setCanceled(String canceled) {
-		this.canceled = canceled;
-	}
-	
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	public Date getCancelDate() {
-		return cancelDate;
-	}
-
-	public void setCancelDate(Date cancelDate) {
-		this.cancelDate = cancelDate;
-	}
-
-	public Date getNowDate() {
-		return nowDate;
-	}
-
-	public void setNowDate(Date nowDate) {
-		this.nowDate = nowDate;
-	}
-	
-	
 	
 }

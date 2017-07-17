@@ -1,57 +1,38 @@
 package net.uchoice.activiti.controller.management;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipInputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 
 import net.uchoice.activiti.cmd.JumpActivityCmd;
 import net.uchoice.activiti.entity.ActForm;
 import net.uchoice.activiti.service.ActFormService;
+import net.uchoice.activiti.service.WorkflowService;
 import net.uchoice.activiti.util.WorkflowUtils;
 import net.uchoice.common.persistence.Page;
 
 import org.activiti.bpmn.converter.BpmnXMLConverter;
-import org.activiti.bpmn.converter.XMLStreamReaderUtil;
-import org.activiti.bpmn.converter.util.InputStreamProvider;
 import org.activiti.bpmn.model.BpmnModel;
-import org.activiti.editor.constants.ModelDataJsonConstants;
-import org.activiti.editor.language.json.converter.BpmnJsonConverter;
 import org.activiti.engine.ManagementService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.impl.interceptor.Command;
-import org.activiti.engine.impl.persistence.deploy.Deployer;
 import org.activiti.engine.impl.util.io.InputStreamSource;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
-import org.activiti.engine.repository.Model;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.runtime.ProcessInstanceQuery;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.input.XmlStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,9 +42,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
 
 /**
  * 流程管理控制器
@@ -83,8 +61,9 @@ public class ProcessDefinitionController {
 	@Autowired
 	private ManagementService managementService;
 	@Autowired
-	ActFormService actFormService;
-
+	private WorkflowService workflowService;
+	@Autowired
+	private ActFormService actFormService;
 	/**
 	 * 流程定义列表
 	 *
@@ -212,98 +191,62 @@ public class ProcessDefinitionController {
 
 	@RequestMapping(value = "/deploy")
 	public String deploy(
-			@RequestParam(value = "file", required = false) MultipartFile file,
+			@RequestParam(value = "tenant" , required = true) String tenant,
+			@RequestParam(value = "file", required = true) MultipartFile file,
 			RedirectAttributes redirectAttributes) {
-
-		String fileName = file.getOriginalFilename();
-
-		try {
+		try{
+			String fileName = file.getOriginalFilename();
 			Deployment deployment = null;
-
-			String extension = FilenameUtils.getExtension(fileName);
+			String extension = fileName.substring(fileName.indexOf('.') + 1);
 			if (extension.equals("zip") || extension.equals("bar")) {
-				ZipInputStream zip = new ZipInputStream(file.getInputStream());
-				deployment = repositoryService.createDeployment()
-						.addZipInputStream(zip).deploy();
-			} else {
-				BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(new InputStreamSource(file.getInputStream()), true, true);
+				deployment = repositoryService.createDeployment().tenantId(tenant)
+						.addZipInputStream(new ZipInputStream(file.getInputStream())).deploy();
+				return "部署" + fileName + "成功";
+			} else if (extension.equals("bpmn") || extension.equals("bpmn20.xml")) {
+				BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(
+						new InputStreamSource(file.getInputStream()), true, true);
 				List<String> formKeys = WorkflowUtils.getFormKeys(bpmnModel);
+				formKeys.add(tenant);
 				List<ActForm> forms = actFormService.findFormsByName(formKeys);
-				if(forms.size() != formKeys.size()){
-					Set<String> existsForms = Sets.newHashSet();
-					StringBuilder notExists  = new StringBuilder();
-					for(ActForm actForm:forms){
-						existsForms.add(actForm.getName());
-					}
-					for(String fkey:formKeys){
-						if(!existsForms.contains(fkey)){
-							notExists.append(fkey).append(",");
-						}
-					}
-					redirectAttributes.addFlashAttribute("message", "部署失败，流程中需要的表单"
-							+ notExists.substring(0, notExists.length() - 1) + "不存在");
+				Set<String> notExistForms = WorkflowUtils.getNotExistForms(forms, formKeys);
+				if (!notExistForms.isEmpty()) {
+					redirectAttributes.addFlashAttribute("message", "部署" + fileName + "失败，流程中需要的表单"
+							+ notExistForms + "不存在");
 				} else {
-					DeploymentBuilder deploymentBuilder = repositoryService.createDeployment()
-							.addInputStream(fileName, file.getInputStream());
-					for(ActForm f:forms){
+					DeploymentBuilder deploymentBuilder = repositoryService
+							.createDeployment().addInputStream(fileName,
+									file.getInputStream());
+					for (ActForm f : forms) {
 						deploymentBuilder.addString(f.getName(), f.getContent());
 					}
+					deploymentBuilder.tenantId(tenant);
 					deployment = deploymentBuilder.deploy();
-					redirectAttributes.addFlashAttribute("message", "部署成功，部署ID="
-							+ deployment.getId());
+					redirectAttributes.addFlashAttribute("message", "部署成功，部署ID=" + deployment.getId());
 				}
+			} else {
+				redirectAttributes.addFlashAttribute("message", "部署" + fileName + "失败，上传文件类型错误");
 			}
-
-			redirectAttributes.addFlashAttribute("message", "部署"
-					+ fileName + "成功");
-		} catch (Exception e) {
-			logger.error(
-					"error on deploy process, because of file input stream", e);
-			redirectAttributes.addFlashAttribute("message", "部署"
-					+ fileName + "失败：" + e.getMessage());
+		}catch(Exception e){
+			String fileName = file.getOriginalFilename();
+			logger.error("failed to deploy {}", fileName , e);
+			redirectAttributes.addFlashAttribute("message", "部署" + fileName + "失败：" + e.getMessage());
 		}
-
 		return "redirect:/management/process/defined/list";
 	}
 
 	@RequestMapping(value = "/definition/{processDefinitionId}/convert-to-model")
 	public String convertToModel(
-			@PathVariable("processDefinitionId") String processDefinitionId)
-			throws UnsupportedEncodingException, XMLStreamException {
-		ProcessDefinition processDefinition = repositoryService
-				.createProcessDefinitionQuery()
-				.processDefinitionId(processDefinitionId).singleResult();
-		InputStream bpmnStream = repositoryService.getResourceAsStream(
-				processDefinition.getDeploymentId(),
-				processDefinition.getResourceName());
-		XMLInputFactory xif = XMLInputFactory.newInstance();
-		InputStreamReader in = new InputStreamReader(bpmnStream, "UTF-8");
-		XMLStreamReader xtr = xif.createXMLStreamReader(in);
-		BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(xtr);
-
-		BpmnJsonConverter converter = new BpmnJsonConverter();
-		com.fasterxml.jackson.databind.node.ObjectNode modelNode = converter
-				.convertToJson(bpmnModel);
-		//String name = processDefinition.getResourceName();
-		Model modelData = repositoryService.newModel();
-		modelData.setKey(processDefinition.getKey());
-		modelData.setName(processDefinition.getResourceName());
-		modelData.setCategory(processDefinition.getDeploymentId());
-
-		ObjectNode modelObjectNode = new ObjectMapper().createObjectNode();
-		modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME,
-				processDefinition.getName());
-		modelObjectNode.put(ModelDataJsonConstants.MODEL_REVISION, 1);
-		modelObjectNode.put(ModelDataJsonConstants.MODEL_DESCRIPTION,
-				processDefinition.getDescription());
-		modelData.setMetaInfo(modelObjectNode.toString());
-
-		repositoryService.saveModel(modelData);
-
-		repositoryService.addModelEditorSource(modelData.getId(), modelNode
-				.toString().getBytes("utf-8"));
-
-		return "redirect:/management/model/list";
+			@PathVariable("processDefinitionId") String processDefinitionId,
+			RedirectAttributes redirectAttributes) {
+		try{
+			String modelId = workflowService.processDefinitionToModel(processDefinitionId);
+			redirectAttributes.addFlashAttribute("message", "转化为模型成功，ID：" + modelId);
+			return "redirect:/management/model/list";
+		}catch(Exception e){
+			logger.error("failed to convert model to model", e);
+			redirectAttributes.addFlashAttribute("message", "转化为模型失败：" + e.getMessage());
+			return "redirect:/management/process/defined/list";
+		}
 	}
 
 	/**

@@ -6,6 +6,9 @@
 	<title>流程代办信息管理</title>
 	<script type="text/javascript">
 		$(document).ready(function() {
+			$("#processId").on('change', function(){
+				$("#processName").val($(this).find("option:selected").text());
+			})
 			$("#inputForm").validate({
 				submitHandler: function(form){
 					loading('正在提交，请稍等...');
@@ -26,42 +29,39 @@
 </head>
 <body>
 	<ul class="nav nav-tabs">
-		<li><a th:href="@{/activiti/actDelegate/}">流程代办信息列表</a></li>
-		<li class="active"><a th:href="@{${'/activiti/actDelegate/form?id='+actDelegate.id}}">流程代办信息添加</a></li>
+		<li><a th:href="@{/activiti/actGrant/}">流程授权信息列表</a></li>
+		<li class="active"><a th:href="@{${'/activiti/actGrant/form?id='+actGrant.id}}">流程授权信息添加</a></li>
 	</ul><br/>
 	<div th:replace="/common/fragment::message">信息</div>
-	<form id="inputForm" th:action="@{/activiti/actDelegate/save}" method="post" class="form-horizontal">
+	<form id="inputForm" th:action="@{/activiti/actGrant/save}" method="post" class="form-horizontal">
 		<div class="control-group">
-			<label class="control-label">被代理人：</label>
+			<label class="control-label">流程所有人：</label>
 			<div class="controls">
 				<span th:text="${#authentication.name}"></span>
 			</div>
 		</div>
 		<div class="control-group">
-			<label class="control-label">代理人：</label>
+			<label class="control-label">被授予人：</label>
 			<div class="controls">
-				<input type="text" name="assign" maxlength="64" class="input-xlarge required"/>
+				<input type="text" name="grant" maxlength="64" class="input-xlarge required"/>
 				<span class="help-inline"><font color="red">*</font> </span>
 			</div>
 		</div>
 		<div class="control-group">
 			<label class="control-label">流程ID：</label>
 			<div class="controls">
-				<input type="text" name="processId" maxlength="64" class="input-xlarge required"/>
+				<select id="processId" name="processId" class="input-xlarge required">
+					<option th:each="pro:${processes}" th:value="${pro.id}" th:text="${pro.name}" th:selected="${pro.id == actGrant.processId}"></option>
+				</select>
 				<span class="help-inline"><font color="red">*</font> </span>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label">流程名称：</label>
-			<div class="controls">
-				<input type="text" name="processName" maxlength="255" class="input-xlarge "/>
+				<input id="processName" type="hidden" name="processName"/>
 			</div>
 		</div>
 		<div class="control-group">
 			<label class="control-label">开始日期：</label>
 			<div class="controls">
 				<input name="startDate" id="startDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
-					onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',isShowClear:false,minDate:'%y-%M-%d %H:%m:%s'});"/>
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false,minDate:'%y-%M-%d'});"/>
 				<span class="help-inline"><font color="red">*</font> </span>
 			</div>
 		</div>
@@ -69,7 +69,7 @@
 			<label class="control-label">截止日期：</label>
 			<div class="controls">
 				<input name="endDate" id="endDate" type="text" readonly="readonly" maxlength="20" class="input-medium Wdate required"
-					onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',isShowClear:false,minDate:'#F{$dp.$D(\'startDate\')||\'%y-%M-%d %H:%m:%s\'}'});"/>
+					onclick="WdatePicker({dateFmt:'yyyy-MM-dd',isShowClear:false,minDate:'#F{$dp.$D(\'startDate\')||\'%y-%M-%d\'}'});"/>
 				<span class="help-inline"><font color="red">*</font> </span>
 			</div>
 		</div>

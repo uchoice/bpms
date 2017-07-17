@@ -3,15 +3,17 @@ package net.uchoice.activiti.controller.workflow;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.uchoice.activiti.entity.ActDelegate;
 import net.uchoice.activiti.service.ActDelegateService;
+import net.uchoice.activiti.service.ActGrantService;
+import net.uchoice.activiti.service.WorkflowService;
 import net.uchoice.common.entity.JsonResult;
 import net.uchoice.common.persistence.Page;
 
@@ -37,6 +39,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.extras.springsecurity4.auth.AuthUtils;
 
+import com.google.common.collect.Maps;
+
 @Controller
 @RequestMapping("/workflow/task")
 public class TaskController {
@@ -55,10 +59,15 @@ public class TaskController {
 
 	@Autowired
 	private IdentityService identityService;
-	
+
+	@Autowired
+	private ActGrantService actGrantService;
+
 	@Autowired
 	private ActDelegateService actDelegateService;
 
+	@Autowired
+	private WorkflowService workflowService;
 	/**
 	 * 所有任务列表
 	 *
@@ -74,27 +83,25 @@ public class TaskController {
 		User user = (User) AuthUtils.getAuthenticationObject().getPrincipal();
 		HistoricTaskInstanceQuery query = historyService
 				.createHistoricTaskInstanceQuery()
-				.taskInvolvedUser(user.getId())
-				.orderByTaskCreateTime()
-				.desc();
-		if("1".equals(finish)){	//已办理
+				.taskInvolvedUser(user.getId()).orderByTaskCreateTime().desc();
+		if ("1".equals(finish)) { // 已办理
 			query.finished();
-		} else if("0".equals(finish)){	//未办理
+		} else if ("0".equals(finish)) { // 未办理
 			query.unfinished();
 		}
-		if("1".equals(delegate)){	//我代办的
+		if ("1".equals(delegate)) { // 我代办的
 			query.taskAssignee(user.getId()).taskOwnerLike("%");
-		} else if("2".equals(delegate)){	//被代办的
+		} else if ("2".equals(delegate)) { // 被代办的
 			query.taskOwner(user.getId());
-		} else {		//其他
+		} else { // 其他
 			query.taskAssignee(user.getId());
 		}
 		page.setCount(query.count());
 		List<HistoricTaskInstance> list = query.listPage(page.getFirstResult(),
 				page.getMaxResults());
 		page.setResult(list);
-		mav.addObject("delegate",delegate);
-		mav.addObject("finish",finish);
+		mav.addObject("delegate", delegate);
+		mav.addObject("finish", finish);
 		mav.addObject("page", page);
 		return mav;
 	}
@@ -110,22 +117,23 @@ public class TaskController {
 			HttpServletResponse response) {
 		ModelAndView mav = new ModelAndView("/activiti/workflow/todoTaskList");
 		User user = (User) AuthUtils.getAuthenticationObject().getPrincipal();
-		
-		/*ActDelegate actDelegate = new ActDelegate();
-		actDelegate.setAssign(user.getId());
-		List<ActDelegate> list = actDelegateService.findList(actDelegate);*/
-		
+
 		Page<Task> page = new Page<Task>(request, response);
 		TaskQuery taskQuery = taskService.createTaskQuery().active()
 				.taskCandidateOrAssigned(user.getId());
-		/*for(ActDelegate delegate: list){
-			taskQuery.or().processDefinitionId(delegate.getProcessId())
-			.taskCandidateOrAssigned(delegate.getOwner()).endOr();
-		}*/
 		taskQuery.orderByTaskCreateTime().desc();
 		page.setCount(taskQuery.count());
 		List<Task> tasks = taskQuery.listPage(page.getFirstResult(),
 				page.getMaxResults());
+		List<ActDelegate> delegates = actDelegateService.findListByTaksIds(
+				tasks.stream().map(o -> {
+					return o.getId();
+				}).collect(Collectors.toList()), user.getId());
+		Map<String, ActDelegate> delegateMap = Maps.newHashMap();
+		for (ActDelegate actDelegate : delegates) {
+			delegateMap.put(actDelegate.getTaskId(), actDelegate);
+		}
+		mav.addObject("delegateMap", delegateMap);
 		page.setResult(tasks);
 		mav.addObject("page", page);
 		return mav;
@@ -148,9 +156,8 @@ public class TaskController {
 	 */
 	@RequestMapping(value = "/claim/{taskId}")
 	public String claim(@PathVariable("taskId") String taskId,
-			HttpSession session, RedirectAttributes redirectAttributes) {
-		User user = (User) AuthUtils.getAuthenticationObject().getPrincipal();
-		taskService.claim(taskId, user.getId());
+			RedirectAttributes redirectAttributes) {
+		workflowService.claimTask(taskId);
 		redirectAttributes.addFlashAttribute("message", "任务已签收");
 		return "redirect:/workflow/task/todo/list";
 	}

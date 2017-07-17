@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.uchoice.activiti.dao.ActGrantDao">
+    
+	<sql id="actGrantColumns">
+		a.id AS "id",
+		a.owner AS "owner",
+		a.`grant` AS "grant",
+		a.process_id AS "processId",
+		a.process_name AS "processName",
+		a.start_date AS "startDate",
+		a.end_date AS "endDate",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.`revoke` AS "revoke",
+		a.revoke_date AS "revokeDate"
+	</sql>
+	
+	<sql id="actGrantJoins">
+	</sql>
+    
+	<select id="get" resultType="ActGrant">
+		SELECT 
+			<include refid="actGrantColumns"/>
+		FROM act_grant a
+		<include refid="actGrantJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="ActGrant">
+		SELECT 
+			<include refid="actGrantColumns"/>
+		FROM act_grant a
+		<include refid="actGrantJoins"/>
+		<where>
+			
+			<if test="owner != null and owner != ''">
+				AND a.owner = #{owner}
+			</if>
+			<if test="grant != null and grant != ''">
+				AND a.`grant` = #{grant}
+			</if>
+			<if test="processId != null and processId != ''">
+				AND a.process_id = #{processId}
+			</if>
+			<if test="startDate != null">
+				AND a.end_date &gt;= #{startDate}
+			</if>
+			<if test="endDate != null">
+				AND a.start_date &lt;= #{endDate}
+			</if>
+			<if test="revoke != null and revoke != ''">
+				AND a.`revoke` = #{revoke}
+			</if>
+			<if test="nowDate != null">
+				AND a.start_date &lt;= #{nowDate}
+				AND a.end_date &gt;= #{nowDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="ActGrant">
+		SELECT 
+			<include refid="actGrantColumns"/>
+		FROM act_grant a
+		<include refid="actGrantJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO act_grant(
+			owner,
+			`grant`,
+			process_id,
+			process_name,
+			start_date,
+			end_date,
+			create_date,
+			update_date,
+			remarks
+		) VALUES (
+			#{owner},
+			#{grant},
+			#{processId},
+			#{processName},
+			#{startDate},
+			#{endDate},
+			#{createDate},
+			#{updateDate},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE act_grant SET 	
+			start_date = #{startDate},
+			end_date = #{endDate},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE act_grant SET 
+		`revoke` = 1,
+		revoke_date = #{revokeDate}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
