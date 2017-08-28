@@ -19,9 +19,9 @@ import com.google.common.collect.Maps;
  *
  * @author henryyan
  */
-public class ProcessDefinitionCache {
+public class Caches {
 
-	private Map<String, ProcessDefinition> map = Maps.newHashMap();
+	private Map<String, ProcessDefinition> processDefinitions = Maps.newHashMap();
 
 	private Map<String, List<ActivityImpl>> activities = Maps.newHashMap();
 
@@ -33,7 +33,7 @@ public class ProcessDefinitionCache {
 		if(repositoryService == null){
 			repositoryService = SpringContextHolder.getBean(RepositoryService.class);
 		}
-		ProcessDefinition processDefinition = map.get(processDefinitionId);
+		ProcessDefinition processDefinition = processDefinitions.get(processDefinitionId);
 		if (processDefinition == null) {
 			processDefinition = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
 					.getDeployedProcessDefinition(processDefinitionId);
@@ -46,7 +46,7 @@ public class ProcessDefinitionCache {
 
 	public void put(String processDefinitionId,
 			ProcessDefinition processDefinition) {
-		map.put(processDefinitionId, processDefinition);
+		processDefinitions.put(processDefinitionId, processDefinition);
 		ProcessDefinitionEntity pde = (ProcessDefinitionEntity) processDefinition;
 		activities.put(processDefinitionId, pde.getActivities());
 		for (ActivityImpl activityImpl : pde.getActivities()) {

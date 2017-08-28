@@ -27,9 +27,12 @@
 		</tr>
 
 		<tr th:each="hpi:${page.result}">
-			<td><a href="#" class="tenant" th:pid="${hpi.id}" th:pname="${hpi.name }" th:text="${hpi.id}"></a></td>
+			<td th:text="${hpi.id}"></td>
 			<td th:text="${hpi.processDefinitionId}"></td>
-			<td><a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图" th:text="${hpi.name }">activityName</a></td>
+			<td th:inline="text">[[${hpi.name }]]
+				<a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图">跟踪</a>
+				<a href="#" class="tenant" th:pid="${hpi.processInstanceId}" th:pname="${hpi.name }" title="查看流程信息">查看</a>
+			</td>
 			<td th:text="${hpi.startUserId}"></td>
 			<td th:text="${hpi.startTime != null ? #dates.format(hpi.startTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>
 			<td th:text="${hpi.endTime != null ? #dates.format(hpi.endTime,'yyyy-MM-dd HH:mm:ss') : ''}"></td>

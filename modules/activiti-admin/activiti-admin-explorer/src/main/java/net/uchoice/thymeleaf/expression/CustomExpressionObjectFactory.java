@@ -15,14 +15,14 @@ public class CustomExpressionObjectFactory implements IExpressionObjectFactory {
 	
 	public static final String USERS_OBJECT_NAME = "users";
 	
-	public static final String PROCESS_DEFINITION_CACHE_OBJECT_NAME = "pdCaches";
+	public static final String CACHE_OBJECT_NAME = "caches";
 
 	public static final Set<String> ALL_EXPRESSION_OBJECT_NAMES;
 
 	private static final Cookies COOKIES_EXPRESSION_OBJECT = new Cookies();
 	private static final Dicts DICTS_EXPRESSION_OBJECT = new Dicts();
 	private static final Users USERS_EXPRESSION_OBJECT = new Users();
-	private static final ProcessDefinitionCache PROCESS_DEFINITION_CACHE_EXPRESSION_OBJECT = new ProcessDefinitionCache();
+	private static final Caches CACHE_EXPRESSION_OBJECT = new Caches();
 
 	static {
 
@@ -31,7 +31,7 @@ public class CustomExpressionObjectFactory implements IExpressionObjectFactory {
 		allExpressionObjectNames.add(COOKIES_OBJECT_NAME);
 		allExpressionObjectNames.add(DICTS_OBJECT_NAME);
 		allExpressionObjectNames.add(USERS_OBJECT_NAME);
-		allExpressionObjectNames.add(PROCESS_DEFINITION_CACHE_OBJECT_NAME);
+		allExpressionObjectNames.add(CACHE_OBJECT_NAME);
 		ALL_EXPRESSION_OBJECT_NAMES = Collections
 				.unmodifiableSet(allExpressionObjectNames);
 
@@ -54,8 +54,8 @@ public class CustomExpressionObjectFactory implements IExpressionObjectFactory {
 		if (USERS_OBJECT_NAME.equals(expressionObjectName)) {
 			return USERS_EXPRESSION_OBJECT;
 		}
-		if (PROCESS_DEFINITION_CACHE_OBJECT_NAME.equals(expressionObjectName)) {
-			return PROCESS_DEFINITION_CACHE_EXPRESSION_OBJECT;
+		if (CACHE_OBJECT_NAME.equals(expressionObjectName)) {
+			return CACHE_EXPRESSION_OBJECT;
 		}
 		return null;
 	}

@@ -101,7 +101,7 @@ function tenantForm(){
 	// 流程ID
 	var pId = $(this).attr('pid');
 	
-    top.$.jBox.open("iframe:" + ctxPath + "/workflow/process/" + pId + "/tenant-form", "流程总览---" + pname, 700, 500, {
+    top.$.jBox.open("iframe:" + ctxPath + "/workflow/process/" + pId + "/tenant-form", "流程查看---" + pname, 700, 500, {
 		buttons:{"关闭":true}, loaded:function(h){
 			$(".jbox-content", top.document).css("overflow-y","hidden");
 		}

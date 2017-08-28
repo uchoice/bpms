@@ -81,6 +81,9 @@ public class ProcessInstanceHighlightsResource {
 		try {
 			HistoricProcessInstance hisProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
 			String processDefinitionId = hisProcessInstance.getProcessDefinitionId();
+			responseJSON.put("startUser", hisProcessInstance.getStartUserId());
+			responseJSON.put("startTime", hisProcessInstance.getStartTime() == null ? "" : df.format(hisProcessInstance.getStartTime()));
+			responseJSON.put("endTime", hisProcessInstance.getEndTime() == null ? "" : df.format(hisProcessInstance.getEndTime()));
 			List<HistoricActivityInstance> historicHighLightedActivities = historyService.createHistoricActivityInstanceQuery()
 					.processInstanceId(processInstanceId).list();
 			ObjectNode userTask = null;
@@ -90,6 +93,7 @@ public class ProcessInstanceHighlightsResource {
 					userTask = objectMapper.createObjectNode();
 					userTaskIds.add(activityInstance.getTaskId());
 					userTask.put("activityId", activityInstance.getActivityId());
+					userTask.put("activityName", activityInstance.getActivityName());
 					userTask.put("taskId", activityInstance.getTaskId());
 					userTasks.add(userTask);
 				}
@@ -121,8 +125,7 @@ public class ProcessInstanceHighlightsResource {
 		} catch (Exception e) {
 			log.error("highlights exception", e);
 		}
-		
-		responseJSON.put("userTaks", userTasks);
+		responseJSON.put("userTasks", userTasks);
 		responseJSON.put("activities", activitiesArray);
 		responseJSON.put("flows", flowsArray);
 		

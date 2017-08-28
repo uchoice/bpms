@@ -88,11 +88,12 @@ public class ProcessController {
 	/**
 	 * 读取流程全局表单，读取流程的全局表单内容来渲染tenantForm
 	 */
-	@RequestMapping(value = "/{processDefinitionId}/tenant-form")
+	@RequestMapping(value = "/{processInstanceId}/tenant-form")
 	public String findTenantForm(
-			@PathVariable("processDefinitionId") String processDefinitionId,Model model) throws Exception {
+			@PathVariable("processInstanceId") String processInstanceId,Model model) throws Exception {
 		// 根据流程定义ID读取外置表单
-		model.addAttribute("form", managementService.executeCommand(new GetRenderedTenantFormCmd(processDefinitionId)));
+		model.addAttribute("form", managementService.executeCommand(new GetRenderedTenantFormCmd(processInstanceId)));
+		model.addAttribute("processInstanceId", processInstanceId);
 		return "/activiti/workflow/tenantForm";
 	}
 	

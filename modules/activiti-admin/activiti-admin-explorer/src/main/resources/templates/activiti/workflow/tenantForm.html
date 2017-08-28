@@ -4,15 +4,89 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link th:replace="/common/fragment::head">
 	<title>查看流程信息</title>
+	<style type="text/css">
+		fieldset{
+			padding: 10px 5px;
+		}
+		#processInfo .item{
+			display: inline-block;
+			padding-bottom: 10px;
+			margin-right: 30px;
+		}
+	</style>
 	<script type="text/javascript">
 		$(document).ready(function() {
+			var table = $("#activities table");
+			var baseUrl = window.document.location.protocol + "//" + window.document.location.host + "/";
+  			var shortenedUrl = window.document.location.href.replace(baseUrl, "");
+  			baseUrl = baseUrl + shortenedUrl.substring(0, shortenedUrl.indexOf("/"));
+			var url = baseUrl + "/process-instance/"+ table.attr("pid") +"/highlights?callback=?";
+			$.ajax({
+				url : url,
+				type : 'GET',
+				dataType: "jsonp",
+				jsonp : "jsonpCallback",
+				success: function(data){
+					var assignInfo = '';
+					$.each(data.userTasks, function(i,o){
+						assignInfo = assignInfo + '<tr><td>' + o.activityName + '</td><td>';
+						assignInfo = assignInfo +  o.startTime + '</td><td>';
+						assignInfo = assignInfo +  o.claimTime + '</td><td>';
+						assignInfo = assignInfo +  o.endTime + '</td><td>';
+						assignInfo = assignInfo + o.assignee + '</td><td>';
+						if(o.endTime && o.endTime != ''){
+							assignInfo = assignInfo + '<span class="label label-success">已办理</span></td></tr>';
+						} else {
+							assignInfo = assignInfo + '<span class="label label-default">未办理</span></td></tr>';
+						}
+					});
+					var processInfo = '<div class="item">启动人：' + data.startUser + '</div><div class="item">启动时间：' 
+						+ data.startTime + '</div>';
+					if(data.endTime && data.endTime != ''){
+						processInfo += '<div class="item">结束时间：' + data.endTime + '</div>' 
+							+ '<div class="item"><span class="label label-success">已结束</span></div>';
+					} else {
+						processInfo += '<div class="item"><span class="label label-info">运行中</span></div';
+					}
+					$("#processInfo").html(processInfo);
+					table.find("tbody").html(assignInfo);
+				},
+				error : function(error){
+					console.log(error);
+				}
+			});
 		});
 	</script>
 </head>
 
-<body>
-	<div th:utext="${form}">
-	
-	</div>
+<body disabled>
+	<fieldset>
+		<legend>流程表单内容</legend>
+		<div th:utext="${form}" id="tenantForm">
+		
+		</div>
+	</fieldset>
+	<fieldset>
+		<legend>流程信息</legend>
+		<div id="processInfo" class="bg-info"></div>
+	</fieldset>
+	<fieldset id="activities" disabled>
+		<legend>流程审批信息</legend>
+		<table class="table table-bordered table-hover table-condensed" th:pid="${processInstanceId}">
+			<thead>
+				<tr>
+					<th>审批环节</th>
+					<th>开始时间</th>
+					<th>签收时间</th>
+					<th>办理时间</th>
+					<th>办理人</th>
+					<th>状态</th>
+				</tr>
+			</thead>
+			<tbody>
+				
+			</tbody>
+		</table>
+	</fieldset>
 </body>
 </html>

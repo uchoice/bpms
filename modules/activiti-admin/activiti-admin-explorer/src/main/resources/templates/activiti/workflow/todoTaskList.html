@@ -37,7 +37,10 @@
 			<tr th:each="task:${page.result}"  th:with="dele=${delegateMap[task.id]}">
 				<td th:text="${task.id}"></td>
 				<td th:text="${task.taskDefinitionKey}"></td>
-				<td><a class="trace" href='#' th:pid="${task.processInstanceId}" th:pdid="${task.processDefinitionId}" title="点击查看流程图" th:text="${task.name }">activityName</a></td>
+				<td th:inline="text">[[${task.name }]]
+					<a class="trace" href='#' th:pid="${task.processInstanceId}" th:pdid="${task.processDefinitionId}" title="点击查看流程图">跟踪</a>
+					<a href="#" class="tenant" th:pid="${task.processInstanceId}" th:pname="${task.name }" title="查看流程信息">查看</a>
+				</td>
 				<td th:text="${task.processDefinitionId}"></td>
 				<td th:text="${task.processInstanceId}"></td>
 				<td th:text="${task.priority}"></td>

@@ -69,6 +69,8 @@ public class ActFormController extends BaseController {
 	@RequestMapping(value = "save")
 	public String save(ActForm actForm, Model model,
 			RedirectAttributes redirectAttributes) {
+		//因为ueditor转了一次，所以，这里需要转两次
+		actForm.setContent(HtmlUtils.htmlUnescape(actForm.getContent()));
 		actForm.setContent(HtmlUtils.htmlUnescape(actForm.getContent()));
 		if (!beanValidator(model, actForm)) {
 			return form(actForm, model);

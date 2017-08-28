@@ -58,7 +58,10 @@
 				<td th:text="${hpt.id }">任务ID</td>
 				<td th:text="${hpt.processInstanceId }">流程实例ID</td>
 				<td th:text="${hpt.processDefinitionId }">流程定义ID</td>
-				<td><a class="trace" href='#' th:pid="${hpt.processInstanceId}" th:pdid="${hpt.processDefinitionId}" title="点击查看流程图" th:text="${hpt.name }">activityName</a></td>
+				<td th:inline="text">[[${hpt.name }]]
+					<a class="trace" href='#' th:pid="${hpt.processInstanceId}" th:pdid="${hpt.processDefinitionId}" title="点击查看流程图">跟踪</a>
+					<a href="#" class="tenant" th:pid="${hpt.processInstanceId}" th:pname="${hpt.name }" title="查看流程信息">查看</a>
+				</td>
 				<td th:text="${hpt.owner }">任务所有人</td>
 				<td th:text="${hpt.assignee }">任务办理人</td>
 				<td th:text="${hpt.startTime != null ? #dates.format(hpt.startTime,'yyyy-MM-dd HH:mm:ss') : ''}">任务开始时间</td>

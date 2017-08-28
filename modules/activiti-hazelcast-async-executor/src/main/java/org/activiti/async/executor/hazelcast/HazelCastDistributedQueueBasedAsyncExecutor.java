@@ -169,12 +169,13 @@ public class HazelCastDistributedQueueBasedAsyncExecutor extends DefaultAsyncJob
   }
 	
 	@Override
-  public void executeAsyncJob(JobEntity job) {
+  public boolean executeAsyncJob(JobEntity job) {
 		try {
 	    jobQueue.put(job);
     } catch (InterruptedException e) {
 	    // Nothing to do about it, can happen at shutdown for example
     }
+		return true;
   }
 	
 }

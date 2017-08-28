@@ -145,7 +145,8 @@ public class RootPropertyResolver extends ELResolver {
 	 * @return <code>true</code> if the given property is associated with a value
 	 */
 	public boolean isProperty(String property) {
-		return map.containsKey(property);
+		// update by xbyang 2017年7月18日18:26:48
+		return true; //map.containsKey(property);
 	}
 
 	/**

@@ -90,7 +90,8 @@ public class DelegateUserTaskActivityBehavior extends UserTaskActivityBehavior {
 		ActDelegate actDelegate = null;
 		for (ActGrant actGrant : actGrants) {
 			if (!users.contains(actGrant.getGrant())
-					&& users.contains(actGrant.getOwner())) {
+					&& users.contains(actGrant.getOwner())
+					&& !newUsers.contains(actGrant.getGrant())) {
 				newUsers.add(actGrant.getGrant());
 				actDelegate = new ActDelegate();
 				actDelegate.setTaskId(task.getId());

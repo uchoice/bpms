@@ -58,10 +58,13 @@
 		</thead>
 		<tbody>
 			<tr th:each="hpi:${page.result }">
-				<td><a href="#" class="tenant" th:pid="${hpi.id}" th:pname="${hpi.name }" th:text="${hpi.id}">流程ID</a></td>
+				<td th:text="${hpi.id}"></td>
 				<td th:text="${hpi.processDefinitionId }">流程定义ID</td>
 				<td th:text="${hpi.deploymentId }">流程部署ID</td>
-				<td><a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图" th:text="${hpi.name }">activityName</a></td>
+				<td th:inline="text">[[${hpi.name }]]
+					<a class="trace" href='#' th:pid="${hpi.processInstanceId}" th:pdid="${hpi.processDefinitionId}" title="点击查看流程图">跟踪</a>
+					<a href="#" class="tenant" th:pid="${hpi.id}" th:pname="${hpi.name }" title="点击查看流程信息">信息</a>
+				</td>
 				<td th:text="${hpi.startUserId }">流程启动人</td>
 				<td th:text="${hpi.startTime != null ? #dates.format(hpi.startTime,'yyyy-MM-dd HH:mm:ss') : ''}">流程启动时间</td>
 				<td th:text="${hpi.endTime != null ? #dates.format(hpi.endTime,'yyyy-MM-dd HH:mm:ss') : ''}">流程结束时间</td>

@@ -660,13 +660,15 @@ public class DefaultProcessDiagramGenerator implements ProcessDiagramGenerator {
         processDiagramCanvas.drawSequenceflow(xPoints, yPoints, drawConditionalIndicator, isDefault, highLighted, scaleFactor);
         // update by xbyang 2017年7月6日10:03:54
         // Draw sequenceflow label
-        GraphicInfo labelGraphicInfo = bpmnModel.getLabelGraphicInfo(sequenceFlow.getId());
+        /*GraphicInfo labelGraphicInfo = bpmnModel.getLabelGraphicInfo(sequenceFlow.getId());
         if (labelGraphicInfo != null) {
           processDiagramCanvas.drawLabel(sequenceFlow.getName(), labelGraphicInfo, false);
         } else {
           GraphicInfo lineCenter = getLineCenter(graphicInfoList);  
           processDiagramCanvas.drawLabel(sequenceFlow.getName(), lineCenter, false);  
-        }
+        }*/
+        GraphicInfo lineCenter = getLineCenter(graphicInfoList);  
+        processDiagramCanvas.drawLabel(sequenceFlow.getName(), lineCenter, false);  
       }
     }
 

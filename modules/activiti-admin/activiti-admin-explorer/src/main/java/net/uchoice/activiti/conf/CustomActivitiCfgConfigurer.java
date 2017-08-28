@@ -2,6 +2,7 @@ package net.uchoice.activiti.conf;
 
 import net.uchoice.activiti.behavior.DelegateUserTaskActivityBehaviorFactory;
 
+import org.activiti.engine.impl.history.HistoryLevel;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.activiti.spring.boot.ProcessEngineConfigurationConfigurer;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,7 @@ public class CustomActivitiCfgConfigurer implements ProcessEngineConfigurationCo
     		processEngineConfiguration.setActivityFontName(font);
     		processEngineConfiguration.setLabelFontName(font);
     	}
+    	//processEngineConfiguration.setHistoryLevel(HistoryLevel.FULL);
     	processEngineConfiguration.setActivityBehaviorFactory(new DelegateUserTaskActivityBehaviorFactory());
     }
     

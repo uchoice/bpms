@@ -28,10 +28,13 @@
 		</tr>
 		<tr th:each="p:${page.result }">
 			<td th:text="${p.id }">流程执行id</td>
-			<td><a href="#" class="tenant" th:pid="${p.processInstanceId}" th:pname="${p.name }" th:text="${p.processInstanceId}">流程实例ID</a></td>
+			<td th:text="${p.processInstanceId}"></td>
 			<td th:text="${p.processDefinitionId }">流程定义ID</td>
 			<td th:text="${p.name }">流程名称</td>
-			<td><a class="trace" href='#' th:pid="${p.id}" th:pdid="${p.processDefinitionId}" title="点击查看流程图" th:text="${#pdCaches.getActivityName(p.processDefinitionId, p.activityId)}">activityName</a></td>
+			<td th:inline="text">[[${#caches.getActivityName(p.processDefinitionId, p.activityId)}]]
+				<a class="trace" href='#' th:pid="${p.id}" th:pdid="${p.processDefinitionId}" title="点击查看流程图">跟踪</a>
+				<a href="#" class="tenant" th:pid="${p.processInstanceId}" th:pname="${p.name }">查看</a>
+			</td>
 			<td th:text="${p.suspended }">false</td>
 			<td>
 				<a th:if="${p.suspended }" th:href="@{'/management/process/update/instance/'+${p.processInstanceId}+'/active'}" onclick="return confirmx('确认要激活该流程吗？', this.href)">激活</a>

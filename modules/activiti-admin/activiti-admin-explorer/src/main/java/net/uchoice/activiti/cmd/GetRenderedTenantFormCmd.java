@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 public class GetRenderedTenantFormCmd implements Command<Object>, Serializable {
 
 	private static final long serialVersionUID = 1L;
+	
 	protected String processInstanceId;
 
 	public GetRenderedTenantFormCmd(String processInstanceId) {
@@ -76,8 +77,13 @@ public class GetRenderedTenantFormCmd implements Command<Object>, Serializable {
 		return renderTenantForm(processDefinitionEntity.getDeploymentId(),
 				processDefinitionEntity.getTenantId());
 	}
-
-	public Object renderTenantForm(String deploymentId, String tenantId) {
+	/**
+	 * 获取解析后的tenantForm内容
+	 * @param deploymentId
+	 * @param tenantId
+	 * @return
+	 */
+	private Object renderTenantForm(String deploymentId, String tenantId) {
 		String formTemplateString = getFormTemplateString(deploymentId,
 				tenantId);
 		ScriptingEngines scriptingEngines = Context
@@ -86,8 +92,13 @@ public class GetRenderedTenantFormCmd implements Command<Object>, Serializable {
 				ScriptingEngines.DEFAULT_SCRIPTING_LANGUAGE,
 				new ProcessInstanceVariableScope(processInstanceId));
 	}
-
-	protected String getFormTemplateString(String deploymentId, String tenant) {
+	/**
+	 * 获取全局表单模板
+	 * @param deploymentId 部署ID
+	 * @param tenant 表单名称
+	 * @return
+	 */
+	private String getFormTemplateString(String deploymentId, String tenant) {
 
 		ResourceEntity resourceStream = Context
 				.getCommandContext()

@@ -3,7 +3,7 @@ function graphTrace() {
 			+ $(this).attr("pdid") + "&processInstanceId="
 			+ $(this).attr("pid");
 	top.$.jBox("<iframe src='" + url + "' width='100%' height='100%' frameborder='0'/>", {
-		title : "查看流程",
+		title : "流程跟踪",
 		width : 1200,
 		height : 560,
 		buttons : {

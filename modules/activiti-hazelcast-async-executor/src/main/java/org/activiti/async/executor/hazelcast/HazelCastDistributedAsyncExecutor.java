@@ -98,7 +98,7 @@ public class HazelCastDistributedAsyncExecutor extends DefaultAsyncJobExecutor {
   }
 	
 	@Override
-  public void executeAsyncJob(JobEntity job) {
+  public boolean executeAsyncJob(JobEntity job) {
 		try {
 			executorService.submit(new DistributedExecuteJobRunnable(job));
 			System.out.println("BIEP");
@@ -107,6 +107,7 @@ public class HazelCastDistributedAsyncExecutor extends DefaultAsyncJobExecutor {
 			// Execute in calling thread so the job executor can be freed
 			commandExecutor.execute(new ExecuteAsyncJobCmd(job));
 		}
+		return true;
   }
 	
 	public static class DistributedExecuteJobRunnable implements Runnable, Serializable {

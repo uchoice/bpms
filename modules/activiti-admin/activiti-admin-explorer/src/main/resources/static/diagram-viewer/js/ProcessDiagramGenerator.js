@@ -783,10 +783,12 @@ var ProcessDiagramGenerator = {
 		}
 		var processDiagramCanvas = processDiagram.diagramCanvas;
 		// update by xbyang 2017年7月4日14:48:29 -- 添加办理信息
-		var userTasks = highLights.userTaks;
+		var userTasks = highLights.userTasks;
+		console.log(processDiagram);
 		for(var i in userTasks){
 			var rect = processDiagramCanvas.g.bottom;
 			do {
+				console.log(rect.type);
 				if(rect.id == userTasks[i].activityId){
 					var u = rect.data("contextObject");
 					u.properties.assignee = userTasks[i].assignee;
@@ -794,7 +796,7 @@ var ProcessDiagramGenerator = {
 					u.properties.claimTime = userTasks[i].claimTime;
 					u.properties.endTime = userTasks[i].endTime;
 					break;
-				}
+				} 
 				rect = rect.next;
 			} while (rect && rect != null);
 		}
@@ -1059,9 +1061,9 @@ var ProcessDiagramGenerator = {
 			endTime: activity.getProperty("endTime")
 		};
 		var TPL_ACTIVITY_INFO = '' 
-				+ '<div><b>activityId</b>: {activityId}</div>'
-				+ '<div><b>name</b>: {name}</div>'
-				+ '<div><b>type</b>: {type}</div>';
+				+ '<div><b>ID</b>: {activityId}</div>'
+				+ '<div><b>名称</b>: {name}</div>'
+				+ '<div><b>类型</b>: {type}</div>';
 		if(activity.getProperty("type") == 'userTask'){
 			TPL_ACTIVITY_INFO = TPL_ACTIVITY_INFO
 			+ '<div><b>分配用户</b>: {assignExp}</div>'
